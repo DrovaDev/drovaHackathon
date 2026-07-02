@@ -61,7 +61,7 @@ import {
 	ShieldAlert,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -1318,7 +1318,7 @@ const DEFAULT_OPERATING_HOURS_BY_DAY: Record<
 	sunday: { opensAt: "09:00", closesAt: "14:00" },
 };
 
-export default function SetupPage() {
+function SetupPageContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const [step, setStep] = useState(1);
@@ -1799,5 +1799,19 @@ export default function SetupPage() {
 				</div>
 			)}
 		</div>
+	);
+}
+
+export default function SetupPage() {
+	return (
+		<Suspense
+			fallback={
+				<div className="min-h-screen flex items-center justify-center text-muted-foreground text-sm">
+					Loading...
+				</div>
+			}
+		>
+			<SetupPageContent />
+		</Suspense>
 	);
 }
