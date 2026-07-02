@@ -22,7 +22,7 @@ export default function StorefrontOverviewPage() {
   }
 
   return (
-    <div className="px-8 lg:px-12 py-10">
+    <div className="px-4 sm:px-8 lg:px-12 py-10">
       <div className="max-w-4xl space-y-8">
 
         {/* Storefront link card */}

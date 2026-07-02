@@ -126,15 +126,17 @@ function TopNav({ step }: { step: number }) {
 		"Identity",
 	];
 	return (
-		<header className="bg-white border-b border-border px-8 h-14 flex items-center justify-between shrink-0">
-			<div className="flex items-center gap-10">
-				<span className="text-xl font-bold tracking-tight">Drova</span>
-				<nav className="flex items-center gap-6">
+		<header className="bg-white border-b border-border px-4 sm:px-8 h-14 flex items-center justify-between shrink-0 gap-4">
+			<div className="flex items-center gap-4 sm:gap-10 min-w-0">
+				<span className="text-lg sm:text-xl font-bold tracking-tight shrink-0">
+					Drova
+				</span>
+				<nav className="hidden sm:flex items-center gap-6 overflow-x-auto">
 					{navLabels.map((label, i) => (
 						<span
 							key={label}
 							className={cn(
-								"text-sm font-medium py-1 transition-colors",
+								"text-sm font-medium py-1 transition-colors whitespace-nowrap",
 								i + 1 === step
 									? "text-primary border-b-2 border-primary"
 									: "text-muted-foreground",
@@ -144,8 +146,11 @@ function TopNav({ step }: { step: number }) {
 						</span>
 					))}
 				</nav>
+				<span className="sm:hidden text-sm font-medium text-primary whitespace-nowrap">
+					{navLabels[step - 1]}
+				</span>
 			</div>
-			<div className="flex items-center gap-2">
+			<div className="flex items-center gap-2 shrink-0">
 				<button className="size-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
 					<HelpCircle size={15} />
 				</button>
@@ -167,13 +172,13 @@ function CircleStepper({ currentStep }: { currentStep: number }) {
 		{ id: 4, label: "ID" },
 	];
 	return (
-		<div className="flex items-center justify-center mb-10">
+		<div className="flex items-center justify-center mb-6 sm:mb-10">
 			{steps.map(({ id, label }, i, arr) => (
 				<React.Fragment key={id}>
 					<div className="flex flex-col items-center gap-1.5">
 						<div
 							className={cn(
-								"size-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all",
+								"size-8 sm:size-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold border-2 transition-all",
 								id < currentStep
 									? "bg-primary text-primary-foreground border-primary"
 									: id === currentStep
@@ -183,14 +188,14 @@ function CircleStepper({ currentStep }: { currentStep: number }) {
 						>
 							{id < currentStep ? <Check size={16} /> : id}
 						</div>
-						<span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+						<span className="hidden sm:block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
 							{label}
 						</span>
 					</div>
 					{i < arr.length - 1 && (
 						<div
 							className={cn(
-								"h-0.5 w-24 mb-5 mx-0.5 transition-colors",
+								"h-0.5 w-8 sm:w-24 mb-0 sm:mb-5 mx-0.5 transition-colors",
 								id < currentStep ? "bg-primary" : "bg-border",
 							)}
 						/>
@@ -221,28 +226,24 @@ function Step1({
 	isResending: boolean;
 }) {
 	return (
-		<main className="flex-1 flex flex-col items-center py-10 px-8 overflow-y-auto">
+		<main className="flex-1 flex flex-col items-center py-6 sm:py-10 px-4 sm:px-8 overflow-y-auto">
 			<CircleStepper currentStep={1} />
 
 			{/* Split card */}
-			<div className="flex rounded-2xl overflow-hidden shadow-md w-full max-w-2xl">
+			<div className="flex flex-col sm:flex-row rounded-2xl overflow-hidden shadow-md w-full max-w-2xl">
 				{/* Left – dark green panel */}
-				<div className="w-52 bg-primary flex flex-col justify-between p-8 shrink-0">
+				<div className="sm:w-52 bg-primary flex flex-col justify-between p-6 sm:p-8 shrink-0">
 					<div>
-						<div className="w-8 h-1 bg-secondary rounded-full mb-6" />
-						<h2 className="text-white font-bold text-2xl leading-snug">
-							Securing
-							<br />
-							your
-							<br />
-							journey.
+						<div className="w-8 h-1 bg-secondary rounded-full mb-4 sm:mb-6" />
+						<h2 className="text-white font-bold text-xl sm:text-2xl leading-snug">
+							Securing your journey.
 						</h2>
 						<p className="text-white/60 text-sm mt-4 leading-relaxed">
 							Verification ensures every partner in the Drova
 							network is trusted and verified.
 						</p>
 					</div>
-					<div className="flex items-center gap-2 mt-6">
+					<div className="hidden sm:flex items-center gap-2 mt-6">
 						<div className="flex -space-x-2">
 							<div className="size-7 rounded-full bg-amber-300 border-2 border-primary" />
 							<div className="size-7 rounded-full bg-sky-300 border-2 border-primary" />
@@ -257,14 +258,14 @@ function Step1({
 				</div>
 
 				{/* Right – white panel */}
-				<div className="flex-1 bg-white p-10 flex flex-col items-center justify-center">
+				<div className="flex-1 bg-white p-6 sm:p-10 flex flex-col items-center justify-center">
 					<div className="size-16 rounded-full bg-green-100 flex items-center justify-center mb-5">
 						<ShieldCheck size={30} className="text-secondary" />
 					</div>
 					<h3 className="text-2xl font-bold mb-2">
 						Verify your email.
 					</h3>
-					<p className="text-muted-foreground text-sm text-center mb-8 leading-relaxed">
+					<p className="text-muted-foreground text-sm text-center mb-8 leading-relaxed break-all">
 						We&apos;ve sent a 6-digit code to
 						<br />
 						<span className="text-foreground font-medium">
@@ -276,12 +277,12 @@ function Step1({
 					</p>
 
 					<InputOTP maxLength={6} value={otp} onChange={setOtp}>
-						<InputOTPGroup className="gap-2">
+						<InputOTPGroup className="gap-1.5 sm:gap-2">
 							{Array.from({ length: 6 }).map((_, i) => (
 								<InputOTPSlot
 									key={i}
 									index={i}
-									className="size-12 rounded-xl border-2 text-base font-bold"
+									className="size-10 sm:size-12 rounded-xl border-2 text-base font-bold"
 								/>
 							))}
 						</InputOTPGroup>
@@ -311,8 +312,8 @@ function Step1({
 			</div>
 
 			{/* Encrypted footer */}
-			<div className="flex items-center gap-2 mt-8 text-muted-foreground text-[11px] font-semibold uppercase tracking-widest">
-				<Lock size={12} />
+			<div className="flex items-center gap-2 mt-8 text-muted-foreground text-[11px] font-semibold uppercase tracking-widest text-center">
+				<Lock size={12} className="shrink-0" />
 				End-to-end encrypted verification
 			</div>
 		</main>
@@ -352,22 +353,22 @@ function Step2({
 		!!details.latitude;
 
 	return (
-		<div className="flex-1 overflow-y-auto py-8 px-8">
+		<div className="flex-1 overflow-y-auto py-6 sm:py-8 px-4 sm:px-8">
 			<div className="max-w-2xl mx-auto">
 				<CircleStepper currentStep={2} />
 
-				<div className="bg-white rounded-2xl p-8 shadow-sm">
-					<h2 className="text-2xl font-bold mb-1">
+				<div className="bg-white rounded-2xl p-5 sm:p-8 shadow-sm">
+					<h2 className="text-xl sm:text-2xl font-bold mb-1">
 						Tell us about your business.
 					</h2>
-					<p className="text-muted-foreground text-sm mb-8">
+					<p className="text-muted-foreground text-sm mb-6 sm:mb-8">
 						We need these details to verify your commercial
 						operations.
 					</p>
 
 					<div className="space-y-5">
 						{/* Name + State */}
-						<div className="grid grid-cols-2 gap-4">
+						<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 							<div className="space-y-2">
 								<Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
 									Business Name
@@ -440,7 +441,7 @@ function Step2({
 						</div>
 
 						{/* Longitude + Latitude */}
-						<div className="grid grid-cols-2 gap-4">
+						<div className="grid grid-cols-2 gap-3 sm:gap-4">
 							<div className="space-y-2">
 								<Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
 									Longitude
@@ -489,7 +490,7 @@ function Step2({
 						</div>
 
 						{/* Registration + TIN + BVN */}
-						<div className="grid grid-cols-3 gap-4">
+						<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 							<div className="space-y-2">
 								<Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
 									Registration Number
@@ -537,7 +538,7 @@ function Step2({
 						{/* Validate business */}
 						<div
 							className={cn(
-								"flex items-center justify-between rounded-xl border px-4 py-3",
+								"flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border px-4 py-3",
 								isBusinessValidated
 									? "border-secondary/30 bg-secondary/5"
 									: "border-border bg-muted/30",
@@ -547,12 +548,12 @@ function Step2({
 								{isBusinessValidated ? (
 									<BadgeCheck
 										size={18}
-										className="text-secondary"
+										className="text-secondary shrink-0"
 									/>
 								) : (
 									<ShieldAlert
 										size={18}
-										className="text-muted-foreground"
+										className="text-muted-foreground shrink-0"
 									/>
 								)}
 								<div>
@@ -572,7 +573,7 @@ function Step2({
 								variant={
 									isBusinessValidated ? "outline" : "default"
 								}
-								className="h-9 px-4 rounded-lg shrink-0"
+								className="h-9 px-4 rounded-lg shrink-0 w-full sm:w-auto"
 								onClick={onValidate}
 								disabled={
 									isValidatingTIN || isBusinessValidated
@@ -591,7 +592,7 @@ function Step2({
 						<Button
 							onClick={onNext}
 							disabled={!canContinue}
-							className="h-11 px-8 rounded-xl"
+							className="h-11 px-8 rounded-xl w-full sm:w-auto"
 						>
 							Continue <ArrowRight size={16} className="ml-2" />
 						</Button>
@@ -599,7 +600,7 @@ function Step2({
 				</div>
 
 				{/* Info cards */}
-				<div className="grid grid-cols-2 gap-4 mt-5">
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
 					<div className="bg-white rounded-xl p-4 border border-border flex items-start gap-3">
 						<BadgeCheck
 							size={18}
@@ -680,11 +681,11 @@ function Step3({
 	onBack: () => void;
 }) {
 	return (
-		<div className="flex-1 overflow-y-auto py-8 px-8">
+		<div className="flex-1 overflow-y-auto py-6 sm:py-8 px-4 sm:px-8">
 			<div className="max-w-2xl mx-auto">
 				<CircleStepper currentStep={3} />
 
-				<div className="bg-white rounded-2xl p-8 shadow-sm space-y-8">
+				<div className="bg-white rounded-2xl p-5 sm:p-8 shadow-sm space-y-6 sm:space-y-8">
 					<div>
 						<h2 className="text-2xl font-bold mb-2">
 							Configure your operations.
@@ -752,7 +753,7 @@ function Step3({
 					</div>
 
 					{/* Service Type + Vehicle Type */}
-					<div className="grid grid-cols-2 gap-6">
+					<div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 						<div className="space-y-3">
 							<Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
 								Delivery Service Type
@@ -824,7 +825,7 @@ function Step3({
 						<Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
 							Package Types
 						</Label>
-						<div className="grid grid-cols-3 gap-3">
+						<div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
 							{lookups?.packageTypes.map(({ key, value }) => {
 								const Icon = PACKAGE_ICONS[key] ?? Package;
 								const isActive = packageTypes.includes(value);
@@ -881,9 +882,9 @@ function Step3({
 								return (
 									<div
 										key={hour.day}
-										className="flex items-center justify-between px-3 py-2.5 gap-3"
+										className="flex flex-col sm:flex-row sm:items-center justify-between px-3 py-2.5 gap-2 sm:gap-3"
 									>
-										<div className="flex items-center gap-2.5 w-32 shrink-0">
+										<div className="flex items-center gap-2.5 sm:w-32 shrink-0">
 											<Switch
 												checked={isOpen}
 												onCheckedChange={(checked) =>
@@ -900,7 +901,7 @@ function Step3({
 												{label}
 											</span>
 										</div>
-										<div className="flex items-center gap-2 text-sm">
+										<div className="flex items-center gap-2 text-sm pl-11 sm:pl-0">
 											<input
 												type="time"
 												value={hour.opensAt}
@@ -974,15 +975,15 @@ function Step3({
 					</div>
 				</div>
 
-				<div className="flex items-center justify-between mt-6">
+				<div className="flex items-center justify-between mt-6 gap-3">
 					<Button
 						onClick={onBack}
 						variant="outline"
-						className="h-11 px-6 gap-2 rounded-xl"
+						className="h-11 px-4 sm:px-6 gap-2 rounded-xl"
 					>
 						<ArrowLeft size={16} /> Back
 					</Button>
-					<Button onClick={onNext} className="h-11 px-8 rounded-xl">
+					<Button onClick={onNext} className="h-11 px-6 sm:px-8 rounded-xl">
 						Continue <ArrowRight size={16} className="ml-2" />
 					</Button>
 				</div>
@@ -1031,16 +1032,16 @@ function Step4({
 	const vehicleTags = vehicleTypes;
 
 	return (
-		<div className="flex-1 overflow-y-auto py-8 px-8">
+		<div className="flex-1 overflow-y-auto py-6 sm:py-8 px-4 sm:px-8">
 			<div className="max-w-4xl mx-auto">
 				<CircleStepper currentStep={4} />
-				<h2 className="text-2xl font-bold mb-4">
+				<h2 className="text-xl sm:text-2xl font-bold mb-4">
 					Finalize your identity.
 				</h2>
 
-				<div className="flex gap-6">
+				<div className="flex flex-col lg:flex-row gap-6">
 					{/* Left: Form */}
-					<div className="flex-1 space-y-5">
+					<div className="flex-1 space-y-5 min-w-0">
 						{/* Description */}
 						<div className="bg-white rounded-2xl p-6 shadow-sm space-y-3">
 							<h3 className="text-base font-semibold">
@@ -1066,7 +1067,7 @@ function Step4({
 
 						{/* Logo + Cover */}
 						<div className="bg-white rounded-2xl p-6 shadow-sm">
-							<div className="grid grid-cols-2 gap-4">
+							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 								<div className="space-y-2">
 									<h3 className="text-base font-semibold">
 										Business Logo
@@ -1181,11 +1182,11 @@ function Step4({
 						</div>
 
 						{/* Actions */}
-						<div className="flex items-center justify-between">
+						<div className="flex items-center justify-between gap-3">
 							<Button
 								onClick={onBack}
 								variant="outline"
-								className="h-11 px-6 gap-2 rounded-xl"
+								className="h-11 px-4 sm:px-6 gap-2 rounded-xl"
 								disabled={isCompletingSetup}
 							>
 								<ArrowLeft size={16} /> Back
@@ -1193,7 +1194,7 @@ function Step4({
 							<Button
 								onClick={onComplete}
 								disabled={isCompletingSetup}
-								className="h-11 px-8 rounded-xl"
+								className="h-11 px-6 sm:px-8 rounded-xl"
 							>
 								{isCompletingSetup
 									? "Completing..."
@@ -1204,7 +1205,7 @@ function Step4({
 					</div>
 
 					{/* Right: Storefront Preview */}
-					<div className="w-72 shrink-0 space-y-4">
+					<div className="w-full lg:w-72 shrink-0 space-y-4">
 						<div className="flex items-center gap-2">
 							<Eye size={14} className="text-primary" />
 							<span className="text-[11px] font-bold uppercase tracking-wider text-primary">

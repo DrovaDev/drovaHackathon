@@ -40,13 +40,13 @@ export default function OperationsPage() {
   }
 
   return (
-    <div className="p-12 max-w-5xl">
-      <div className="flex justify-between items-end mb-12">
+    <div className="p-4 sm:p-8 lg:p-12 max-w-5xl">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-8 sm:mb-12">
         <div>
-          <h3 className="text-4xl font-extrabold text-primary tracking-tight mb-2">Configure Logistics</h3>
+          <h3 className="text-3xl sm:text-4xl font-extrabold text-primary tracking-tight mb-2">Configure Logistics</h3>
           <p className="text-muted-foreground max-w-md">Define the operational boundaries and resource allocation for your fleet to ensure optimal delivery flow.</p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex gap-3 sm:gap-4">
           <Button variant="ghost" className="text-primary font-bold hover:bg-silver-two">Discard Changes</Button>
           <Button>Save Changes</Button>
         </div>

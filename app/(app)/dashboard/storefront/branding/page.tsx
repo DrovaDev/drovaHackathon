@@ -18,18 +18,18 @@ export default function BrandingPage() {
   const [emailBranding, setEmailBranding] = useState(true)
 
   return (
-    <div className="px-8 lg:px-12 py-10">
+    <div className="px-4 sm:px-8 lg:px-12 py-10">
       <div className="grid grid-cols-12 gap-8">
         {/* Brand Assets — 7 cols */}
         <section className="col-span-12 lg:col-span-7 space-y-8">
-          <div className="bg-popover p-8 rounded-xl border border-border">
+          <div className="bg-popover p-5 sm:p-8 rounded-xl border border-border">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-primary">Brand Assets</h2>
               <span className="text-xs font-medium text-secondary bg-secondary/10 px-3 py-1 rounded-full">Primary Identity</span>
             </div>
 
-            <div className="flex items-start gap-8 mb-10">
-              <div className="relative group">
+            <div className="flex flex-col sm:flex-row items-start gap-6 sm:gap-8 mb-10">
+              <div className="relative group shrink-0">
                 <div className="w-32 h-32 bg-silver-two rounded-2xl flex items-center justify-center border-2 border-dashed border-border hover:border-secondary transition-colors overflow-hidden">
                   <MaterialIcon name="image" size={48} color="var(--muted-foreground)" />
                 </div>

@@ -34,12 +34,11 @@ const signupSchema = z
 			.string()
 			.min(1, "Email is required")
 			.email("Enter a valid email address"),
-		password: z
-			.string()
-			.min(8, "Password must be at least 8 characters"),
+		password: z.string().min(8, "Password must be at least 8 characters"),
 		confirmPassword: z.string().min(1, "Confirm your password"),
 		acceptTerms: z.boolean().refine((value) => value, {
-			message: "You must agree to the Terms of Service and Privacy Policy",
+			message:
+				"You must agree to the Terms of Service and Privacy Policy",
 		}),
 	})
 	.refine((values) => values.password === values.confirmPassword, {
@@ -94,8 +93,8 @@ export default function Signup() {
 	});
 
 	return (
-		<section className="bg-muted min-h-screen flex items-center justify-center">
-			<div className="space-y-8">
+		<section className="bg-muted min-h-screen flex items-center justify-center px-4 py-8">
+			<div className="w-full max-w-xl space-y-8">
 				<div className="flex flex-col items-center space-y-3">
 					<Image
 						src="/assets/logo.png"
@@ -103,12 +102,12 @@ export default function Signup() {
 						width={100}
 						height={100}
 					/>
-					<h3 className="text-lg font-medium">
+					<h3 className="text-lg font-medium text-center">
 						Business Intelligence Dashboard
 					</h3>
 				</div>
 
-				<Card className="w-xl px-6 py-8">
+				<Card className="w-full px-4 py-6 sm:px-6 sm:py-8">
 					<CardHeader>
 						<CardTitle className="text-2xl font-bold">
 							Start your delivery business today.
@@ -118,7 +117,11 @@ export default function Signup() {
 						</CardDescription>
 					</CardHeader>
 					<CardContent className="mt-6">
-						<form className="space-y-6" onSubmit={onSubmit} noValidate>
+						<form
+							className="space-y-6"
+							onSubmit={onSubmit}
+							noValidate
+						>
 							<div className="grid gap-2">
 								<Label htmlFor="email">Email Address</Label>
 								<Input
@@ -139,7 +142,9 @@ export default function Signup() {
 								<Label htmlFor="password">Password</Label>
 								<div className="relative">
 									<Input
-										type={showPassword ? "text" : "password"}
+										type={
+											showPassword ? "text" : "password"
+										}
 										id="password"
 										placeholder="Enter your password"
 										aria-invalid={!!errors.password}
@@ -149,7 +154,9 @@ export default function Signup() {
 									<button
 										type="button"
 										onClick={() =>
-											setShowPassword((current) => !current)
+											setShowPassword(
+												(current) => !current,
+											)
 										}
 										className="text-muted-foreground hover:text-foreground absolute right-3 top-1/2 -translate-y-1/2"
 										aria-label={
@@ -179,7 +186,9 @@ export default function Signup() {
 								<div className="relative">
 									<Input
 										type={
-											showConfirmPassword ? "text" : "password"
+											showConfirmPassword
+												? "text"
+												: "password"
 										}
 										id="confirm-password"
 										placeholder="Re-enter your password"
@@ -232,8 +241,14 @@ export default function Signup() {
 								/>
 								<div className="space-y-1">
 									<Label htmlFor="toggle-reminder">
-										I agree to the <b>Terms of Service </b> and{" "}
-										<b>Privacy Policy</b>
+										I agree to the
+										<span className="font-bold">
+											Terms of Service
+										</span>
+										and{" "}
+										<span className="font-bold">
+											Privacy Policy
+										</span>
 									</Label>
 									{errors.acceptTerms && (
 										<p className="text-sm text-destructive">
@@ -243,8 +258,14 @@ export default function Signup() {
 								</div>
 							</div>
 
-							<Button type="submit" className="w-full" disabled={isPending}>
-								{isPending ? "Creating Account..." : "Create Account"}
+							<Button
+								type="submit"
+								className="w-full"
+								disabled={isPending}
+							>
+								{isPending
+									? "Creating Account..."
+									: "Create Account"}
 							</Button>
 						</form>
 

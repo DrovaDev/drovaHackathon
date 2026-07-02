@@ -79,7 +79,7 @@ export default function CreateOrderPage() {
   }
 
   return (
-    <div className="px-8 lg:px-12 py-10">
+    <div className="px-4 sm:px-8 lg:px-12 py-10">
       <div className="mb-8">
         <button
           onClick={() => router.back()}

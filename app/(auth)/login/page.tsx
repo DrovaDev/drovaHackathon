@@ -73,8 +73,8 @@ const Login = () => {
 	});
 
 	return (
-		<section className="bg-muted min-h-screen flex items-center justify-center">
-			<div className="space-y-8">
+		<section className="bg-muted min-h-screen flex items-center justify-center px-4 py-8">
+			<div className="w-full max-w-xl space-y-8">
 				<div className="flex flex-col items-center space-y-3">
 					<Image
 						src="/assets/logo.png"
@@ -82,12 +82,12 @@ const Login = () => {
 						width={100}
 						height={100}
 					/>
-					<h3 className="text-lg font-medium">
+					<h3 className="text-lg font-medium text-center">
 						Business Intelligence Dashboard
 					</h3>
 				</div>
 
-				<Card className="w-xl px-6 py-8">
+				<Card className="w-full px-4 py-6 sm:px-6 sm:py-8">
 					<CardHeader>
 						<CardTitle className="text-2xl font-bold">
 							Welcome back
