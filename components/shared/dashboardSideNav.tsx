@@ -6,7 +6,10 @@ import { NavOptionProps, SideNavProps } from "@/types/sideNavTypes";
 import { ContactSupport, Help, Logout } from "@mui/icons-material";
 import { Button } from "../ui/button";
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { useQueryClient } from "@tanstack/react-query";
+import { clearAccessTokenCookie } from "@/lib/auth-cookie";
+import { clearSignupSetupEmail, clearSignupSetupTempToken } from "@/lib/setup-session";
 
 
 const isActiveRoute = (pathname: string, path: string) => {
@@ -36,6 +39,9 @@ const SideNavOption = ({ optionData, clickHandler }: NavOptionProps) => {
 
 const SideNav = ({ list, closeNav }: SideNavProps) => {
 
+    const router = useRouter()
+    const queryClient = useQueryClient()
+
     const clickHandler = (clickFunc?: () => void) => {
 
         if (clickFunc) {
@@ -43,6 +49,14 @@ const SideNav = ({ list, closeNav }: SideNavProps) => {
         }
 
         closeNav()
+    }
+
+    const handleLogout = () => {
+        clearAccessTokenCookie()
+        clearSignupSetupEmail()
+        clearSignupSetupTempToken()
+        queryClient.clear()
+        router.push("/login")
     }
 
 
@@ -108,15 +122,16 @@ const SideNav = ({ list, closeNav }: SideNavProps) => {
                 
 
                 
-                    <SideNavOption key={list.length + 2} index={list.length + 2} 
+                    <SideNavOption key={list.length + 2} index={list.length + 2}
 
-                    clickHandler={()=>clickHandler()}
-                    
+                    clickHandler={clickHandler}
+
                     optionData={{
                         icon: Logout,
                         title: "Log Out",
                         isAvailable: true,
                         url: null,
+                        onclick: handleLogout,
                     }} />
                 
 

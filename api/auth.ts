@@ -1,6 +1,6 @@
 import { apiClient } from "./client";
 import {
-    ChangePasswordPayload,
+	ChangePasswordPayload,
 	ForgotPasswordPayload,
 	LoginPayload,
 	LoginResponse,
@@ -11,7 +11,7 @@ import {
 	ResetPasswordPayload,
 	ValidateEmailPayload,
 	ValidateEmailResponse,
-    ValidateOTPPayload,
+	ValidateOTPPayload,
 } from "./types/auth.types";
 import { ApiResponse } from "./types/general.types";
 
@@ -59,33 +59,32 @@ export async function forgotPassword(payload: ForgotPasswordPayload) {
 	return response.data;
 }
 
-// validate otp 
+// validate otp
 export async function validateOTP(payload: ValidateOTPPayload) {
-    const response = await apiClient.post<ApiResponse<ValidateEmailResponse>>(
-        "/authentication/validate-otp",
-        payload
-    );
-    return response.data;
+	const response = await apiClient.post<ApiResponse<ValidateEmailResponse>>(
+		"/authentication/validate-otp",
+		payload,
+	);
+	return response.data;
 }
-
 
 // reset password
 export async function resetPassword(payload: ResetPasswordPayload) {
-    const response = await apiClient.post<ApiResponse>(
-        "/authentication/reset-password",
-        payload
-    );
-    return response.data;
+	const response = await apiClient.post<ApiResponse>(
+		"/authentication/reset-password",
+		payload,
+	);
+	return response.data;
 }
 
 // export async function validateRiderLoginOTP(payload){
 //     const response = await
 // }
 
-export async function changePassword(payload:ChangePasswordPayload){
-    const response = await apiClient.post<ApiResponse>(
-        "/authentication/change-password",
-        payload
-    );
-    return response.data;
+export async function changePassword(payload: ChangePasswordPayload) {
+	const response = await apiClient.post<ApiResponse>(
+		"/authentication/change-password",
+		payload,
+	);
+	return response.data;
 }

@@ -48,10 +48,6 @@ export interface BusinessProfileSetupPayload {
 	businessState: string;
 	location: BusinessLocationPayload;
 	deliveryScope: DeliveryScope[];
-	deliveryServiceType: DeliveryServiceType[];
-	vehicleType: VehicleType[];
-	packageTypes: PackageType[];
-	numberOfStaffs: number;
 	fleetSize: number;
 	businessRegistrationNumber: string;
 	taxIdentificationNumber: string;

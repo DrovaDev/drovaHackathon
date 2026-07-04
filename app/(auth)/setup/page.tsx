@@ -4,16 +4,12 @@ import { auth, business, upload } from "@/api/router";
 import {
 	BusinessOperatingHourPayload,
 	DeliveryScope,
-	DeliveryServiceType,
 	GetBusinessLookupsResponse,
 	OperatingDay,
-	PackageType,
-	VehicleType,
 } from "@/api/types/business.types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -41,15 +37,6 @@ import {
 	ArrowRight,
 	ArrowLeft,
 	Info,
-	Bike,
-	Car,
-	Truck,
-	Package,
-	FileText,
-	Utensils,
-	ShoppingBasket,
-	AlertTriangle,
-	Boxes,
 	ChevronDown,
 	BadgeCheck,
 	Upload,
@@ -81,7 +68,6 @@ type BusinessDetailsState = {
 
 type OperationsDetailsState = {
 	contactNumber: string;
-	numberOfStaffs: number;
 	fleetSize: number;
 };
 
@@ -91,23 +77,6 @@ type IdentityDetailsState = {
 	coverPreviewUrl: string | null;
 	logoUrl: string | null;
 	coverUrl: string | null;
-};
-
-const VEHICLE_ICONS: Record<string, React.ElementType> = {
-	bike: Bike,
-	bicycle: Bike,
-	car: Car,
-	van: Truck,
-	truck: Truck,
-};
-
-const PACKAGE_ICONS: Record<string, React.ElementType> = {
-	parcel: Package,
-	document: FileText,
-	food: Utensils,
-	groceries: ShoppingBasket,
-	fragile: AlertTriangle,
-	bulk: Boxes,
 };
 
 const DELIVERY_SCOPE_ICONS: Record<string, React.ElementType> = {
@@ -645,12 +614,6 @@ function Step3({
 	onChange,
 	deliveryScope,
 	toggleDeliveryScope,
-	serviceTypes,
-	toggleServiceType,
-	vehicleTypes,
-	toggleVehicleType,
-	packageTypes,
-	togglePackageType,
 	operatingHours,
 	onUpdateOperatingHour,
 	onNext,
@@ -665,12 +628,6 @@ function Step3({
 	) => void;
 	deliveryScope: string[];
 	toggleDeliveryScope: (key: string) => void;
-	serviceTypes: string[];
-	toggleServiceType: (key: string) => void;
-	vehicleTypes: string[];
-	toggleVehicleType: (key: string) => void;
-	packageTypes: string[];
-	togglePackageType: (key: string) => void;
 	operatingHours: BusinessOperatingHourPayload[];
 	onUpdateOperatingHour: (
 		day: OperatingDay,
@@ -746,112 +703,6 @@ function Step3({
 									>
 										<Icon size={14} />
 										{value}
-									</button>
-								);
-							})}
-						</div>
-					</div>
-
-					{/* Service Type + Vehicle Type */}
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-						<div className="space-y-3">
-							<Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
-								Delivery Service Type
-							</Label>
-							<div className="space-y-2">
-								{lookups?.deliveryServiceType.map(
-									({ key, value }) => {
-										const isActive =
-											serviceTypes.includes(value);
-										return (
-											<label
-												key={key}
-												className={cn(
-													"flex items-center gap-3 px-4 py-3 rounded-lg border cursor-pointer transition-colors",
-													isActive
-														? "border-primary/30 bg-primary/5"
-														: "border-border hover:border-primary/20",
-												)}
-											>
-												<Checkbox
-													checked={isActive}
-													onCheckedChange={() =>
-														toggleServiceType(value)
-													}
-												/>
-												<span className="text-sm font-medium">
-													{value}
-												</span>
-											</label>
-										);
-									},
-								)}
-							</div>
-						</div>
-
-						<div className="space-y-3">
-							<Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
-								Vehicle Type
-							</Label>
-							<div className="grid grid-cols-2 gap-2">
-								{lookups?.vehicleType.map(({ key, value }) => {
-									const Icon = VEHICLE_ICONS[key] ?? Bike;
-									const isActive = vehicleTypes.includes(value);
-									return (
-										<button
-											key={key}
-											type="button"
-											onClick={() =>
-												toggleVehicleType(value)
-											}
-											className={cn(
-												"flex flex-col items-center gap-1.5 py-4 rounded-lg border-2 text-xs font-medium transition-colors",
-												isActive
-													? "border-primary bg-primary/5 text-primary"
-													: "border-border text-muted-foreground hover:border-primary/30",
-											)}
-										>
-											<Icon size={22} />
-											{value}
-										</button>
-									);
-								})}
-							</div>
-						</div>
-					</div>
-
-					{/* Package Types */}
-					<div className="space-y-3">
-						<Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
-							Package Types
-						</Label>
-						<div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-							{lookups?.packageTypes.map(({ key, value }) => {
-								const Icon = PACKAGE_ICONS[key] ?? Package;
-								const isActive = packageTypes.includes(value);
-								return (
-									<button
-										key={key}
-										type="button"
-										onClick={() => togglePackageType(value)}
-										className={cn(
-											"flex flex-col items-center gap-1.5 py-4 rounded-lg border-2 text-sm font-medium transition-colors",
-											isActive
-												? "border-primary bg-primary/5 text-primary"
-												: "border-border text-muted-foreground hover:border-primary/30",
-										)}
-									>
-										<Icon
-											size={20}
-											className={
-												isActive
-													? "text-secondary"
-													: "text-muted-foreground"
-											}
-										/>
-										<span className="font-semibold text-xs">
-											{value}
-										</span>
 									</button>
 								);
 							})}
@@ -938,24 +789,8 @@ function Step3({
 						</div>
 					</div>
 
-					{/* Staff + Fleet */}
+					{/* Fleet */}
 					<div className="grid grid-cols-2 gap-4">
-						<div className="space-y-2">
-							<Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
-								Number of Staffs
-							</Label>
-							<Input
-								type="number"
-								min={1}
-								value={details.numberOfStaffs}
-								onChange={(e) =>
-									onChange(
-										"numberOfStaffs",
-										Number(e.target.value),
-									)
-								}
-							/>
-						</div>
 						<div className="space-y-2">
 							<Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
 								Fleet Size
@@ -1001,7 +836,6 @@ function Step4({
 	onCoverSelect,
 	businessName,
 	deliveryScope,
-	vehicleTypes,
 	onBack,
 	onComplete,
 	isCompletingSetup,
@@ -1019,7 +853,6 @@ function Step4({
 	onCoverSelect: (file: File | null) => void;
 	businessName: string;
 	deliveryScope: string[];
-	vehicleTypes: string[];
 	onBack: () => void;
 	onComplete: () => void;
 	isCompletingSetup: boolean;
@@ -1029,7 +862,6 @@ function Step4({
 	coverProgress: number;
 }) {
 	const scopeTags = deliveryScope;
-	const vehicleTags = vehicleTypes;
 
 	return (
 		<div className="flex-1 overflow-y-auto py-6 sm:py-8 px-4 sm:px-8">
@@ -1267,18 +1099,15 @@ function Step4({
 									)}
 								</div>
 								<div className="flex gap-2 mt-3 flex-wrap">
-									{[...scopeTags, ...vehicleTags].length >
-									0 ? (
-										[...scopeTags, ...vehicleTags].map(
-											(tag) => (
-												<span
-													key={tag}
-													className="text-[10px] font-semibold bg-secondary/20 text-secondary px-2 py-0.5 rounded-full uppercase"
-												>
-													{tag}
-												</span>
-											),
-										)
+									{scopeTags.length > 0 ? (
+										scopeTags.map((tag) => (
+											<span
+												key={tag}
+												className="text-[10px] font-semibold bg-secondary/20 text-secondary px-2 py-0.5 rounded-full uppercase"
+											>
+												{tag}
+											</span>
+										))
 									) : (
 										<span className="text-[10px] font-semibold bg-secondary/20 text-secondary px-2 py-0.5 rounded-full">
 											LAST MILE
@@ -1346,13 +1175,9 @@ function SetupPageContent() {
 	const [operationsDetails, setOperationsDetails] =
 		useState<OperationsDetailsState>({
 			contactNumber: "",
-			numberOfStaffs: 1,
 			fleetSize: 1,
 		});
 	const [deliveryScope, setDeliveryScope] = useState<string[]>([]);
-	const [serviceTypes, setServiceTypes] = useState<string[]>([]);
-	const [vehicleTypes, setVehicleTypes] = useState<string[]>([]);
-	const [packageTypes, setPackageTypes] = useState<string[]>([]);
 	const [operatingHours, setOperatingHours] = useState<
 		BusinessOperatingHourPayload[]
 	>([]);
@@ -1701,10 +1526,6 @@ function SetupPageContent() {
 				],
 			},
 			deliveryScope: deliveryScope as DeliveryScope[],
-			deliveryServiceType: serviceTypes as DeliveryServiceType[],
-			vehicleType: vehicleTypes as VehicleType[],
-			packageTypes: packageTypes as PackageType[],
-			numberOfStaffs: operationsDetails.numberOfStaffs,
 			fleetSize: operationsDetails.fleetSize,
 			businessRegistrationNumber:
 				businessDetails.businessRegistrationNumber,
@@ -1757,18 +1578,6 @@ function SetupPageContent() {
 							toggleDeliveryScope={(key) =>
 								toggleInArray(setDeliveryScope, key)
 							}
-							serviceTypes={serviceTypes}
-							toggleServiceType={(key) =>
-								toggleInArray(setServiceTypes, key)
-							}
-							vehicleTypes={vehicleTypes}
-							toggleVehicleType={(key) =>
-								toggleInArray(setVehicleTypes, key)
-							}
-							packageTypes={packageTypes}
-							togglePackageType={(key) =>
-								toggleInArray(setPackageTypes, key)
-							}
 							operatingHours={operatingHours}
 							onUpdateOperatingHour={handleUpdateOperatingHour}
 							onNext={() => setStep(4)}
@@ -1783,7 +1592,6 @@ function SetupPageContent() {
 							onCoverSelect={handleCoverSelect}
 							businessName={businessDetails.businessName}
 							deliveryScope={deliveryScope}
-							vehicleTypes={vehicleTypes}
 							onBack={() => setStep(3)}
 							onComplete={handleCompleteSetup}
 							isCompletingSetup={
