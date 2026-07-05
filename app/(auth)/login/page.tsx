@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { setAccessTokenCookie } from "@/lib/auth-cookie";
+import { storeUserSession } from "@/lib/user-session";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import Image from "next/image";
@@ -54,6 +55,12 @@ const Login = () => {
 					persistent: keepLoggedIn,
 				});
 				window.localStorage.removeItem("token");
+			}
+			if (response.data?.user) {
+				storeUserSession({
+					businessName: response.data.user.business?.businessName ?? "",
+					email: response.data.user.email ?? "",
+				});
 			}
 			toast.success(response.message || "Logged in successfully");
 			router.push("/dashboard");
