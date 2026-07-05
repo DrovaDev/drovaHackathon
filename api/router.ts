@@ -3,7 +3,7 @@ import * as authApi from "./auth";
 import * as businessApi from "./business";
 import * as riderApi from "./rider";
 import { RiderListParams } from "./types/rider.types";
-import * as ordersApi from "./orders";
+import * as orderApi from "./order";
 import * as uploadApi from "./upload";
 
 export const auth = router("auth", {
@@ -102,8 +102,14 @@ export const rider = router("rider", {
 });
 
 export const order = router("order", {
-	assign: router.mutation({
-		mutationFn: ordersApi.manuallyAssignOrder,
+	getOrders: router.query({
+		fetcher: orderApi.getOrders,
+	}),
+	getQuotations: router.query({
+		fetcher: orderApi.getQuotations,
+	}),
+	getOrder: router.query({
+		fetcher: (variables: { id: string }) => orderApi.getOrder(variables.id),
 	}),
 });
 

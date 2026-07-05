@@ -10,6 +10,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query";
 import { clearAccessTokenCookie } from "@/lib/auth-cookie";
 import { clearSignupSetupEmail, clearSignupSetupTempToken } from "@/lib/setup-session";
+import { clearUserSession } from "@/lib/user-session";
 
 
 const isActiveRoute = (pathname: string, path: string) => {
@@ -55,6 +56,7 @@ const SideNav = ({ list, closeNav }: SideNavProps) => {
         clearAccessTokenCookie()
         clearSignupSetupEmail()
         clearSignupSetupTempToken()
+        clearUserSession()
         queryClient.clear()
         router.push("/login")
     }

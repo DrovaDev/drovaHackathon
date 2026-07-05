@@ -1,16 +1,17 @@
 import MaterialIcon from "@/components/ui/material-icon"
 
 type Props = {
+  title?: string
   name: string
   phone: string
   email: string
 }
 
-export function CustomerInfoCard({ name, phone, email }: Props) {
+export function CustomerInfoCard({ title = "Customer Information", name, phone, email }: Props) {
   return (
     <div className="bg-popover rounded-xl p-8 border border-border hover:shadow-2xl hover:shadow-primary/5 transition-all space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="font-bold text-lg text-primary">Customer Information</h3>
+        <h3 className="font-bold text-lg text-primary">{title}</h3>
         <MaterialIcon name="person" size={20} color="var(--muted-foreground)" />
       </div>
       <div className="flex items-start space-x-4">
