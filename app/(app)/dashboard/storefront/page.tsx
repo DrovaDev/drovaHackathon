@@ -1,19 +1,82 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectTrigger, SelectValue, SelectPopup, SelectItem } from "@/components/ui/select"
 import MaterialIcon from "@/components/ui/material-icon"
 import Link from "next/link"
+import { business } from "@/api/router"
+import axios from "axios"
+import { toast } from "sonner"
 
-const storefrontUrl = "https://drova.app/s/speedex-couriers"
+const STOREFRONT_BASE_URL = "https://drova-hackathon-mcun.vercel.app"
 
 export default function StorefrontOverviewPage() {
+  const queryClient = useQueryClient()
+  const { data: profileResponse } = business.getProfile.useQuery()
+  const profile = profileResponse?.data
+
+  const { data: lookupsResponse, isLoading: isLookupsLoading } =
+    business.getBusinessLookups.useQuery()
+  const states = lookupsResponse?.data?.states ?? []
+
   const [copied, setCopied] = useState(false)
-  const [businessName, setBusinessName] = useState("Speedex Couriers")
-  const [tagline, setTagline] = useState("Fast. Reliable. Trusted.")
-  const [contactPhone, setContactPhone] = useState("08012345678")
-  const [whatsappNumber, setWhatsappNumber] = useState("08012345678")
+  const [contactPhone, setContactPhone] = useState("")
+  const [businessAddress, setBusinessAddress] = useState("")
+  const [businessState, setBusinessState] = useState("")
+
+  useEffect(() => {
+    if (profile?.contactNumber) {
+      setContactPhone(profile.contactNumber)
+    }
+    if (profile?.businessAddress) {
+      setBusinessAddress(profile.businessAddress)
+    }
+    if (profile?.businessState) {
+      setBusinessState(profile.businessState)
+    }
+  }, [profile])
+
+  const { mutate: saveProfile, isPending: isSaving } =
+    business.profileEdit.useMutation({
+      onSuccess: (response) => {
+        toast.success(response.message || "Business details updated")
+        queryClient.invalidateQueries({ queryKey: business.getProfile.getKey() })
+      },
+      onError: (error) => {
+        const message = axios.isAxiosError(error)
+          ? error.response?.data?.message
+          : undefined
+        toast.error(message || "Unable to update business details. Try again.")
+      },
+    })
+
+  const handleSave = () => {
+    if (!profile) return
+    saveProfile({
+      businessName: profile.businessName,
+      businessDescription: profile.businessDescription,
+      businessAddress: businessAddress,
+      businessState: businessState,
+      location: profile.location,
+      deliveryScope: profile.deliveryScope,
+      fleetSize: profile.fleetSize,
+      businessRegistrationNumber: profile.businessRegistrationNumber,
+      taxIdentificationNumber: profile.taxIdentificationNumber,
+      bvn: profile.bvn,
+      contactNumber: contactPhone,
+      businessLogo: profile.businessLogo,
+      coverImage: profile.coverImage,
+      operatingHours: profile.operatingHours,
+    })
+  }
+
+  const storefrontUrl = profile?.slug
+    ? `${STOREFRONT_BASE_URL}/${profile.slug}`
+    : STOREFRONT_BASE_URL
 
   const handleCopy = () => {
     navigator.clipboard.writeText(storefrontUrl)
@@ -85,18 +148,33 @@ export default function StorefrontOverviewPage() {
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Business Name</label>
               <Input
-                value={businessName}
-                onChange={e => setBusinessName(e.target.value)}
-                className="bg-silver-two border-0 focus-visible:ring-secondary"
+                value={profile?.businessName ?? ""}
+                disabled
+                className="bg-silver-two border-0 focus-visible:ring-secondary disabled:opacity-70"
+              />
+              <p className="text-[10px] text-muted-foreground italic">Contact support to change your business name.</p>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Business Address</label>
+              <Textarea
+                value={businessAddress}
+                onChange={e => setBusinessAddress(e.target.value)}
+                rows={1}
+                className="bg-silver-two border-0 focus-visible:ring-secondary resize-none"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Tagline</label>
-              <Input
-                value={tagline}
-                onChange={e => setTagline(e.target.value)}
-                className="bg-silver-two border-0 focus-visible:ring-secondary"
-              />
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Business State</label>
+              <Select value={businessState} onValueChange={setBusinessState} disabled={isLookupsLoading}>
+                <SelectTrigger className="!bg-silver-two !border-0">
+                  <SelectValue placeholder={isLookupsLoading ? "Loading states..." : "Select a state"} />
+                </SelectTrigger>
+                <SelectPopup>
+                  {states.map(({ key, value }) => (
+                    <SelectItem key={key} value={value}>{value}</SelectItem>
+                  ))}
+                </SelectPopup>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Contact Phone</label>
@@ -106,17 +184,11 @@ export default function StorefrontOverviewPage() {
                 className="bg-silver-two border-0 focus-visible:ring-secondary"
               />
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">WhatsApp Number</label>
-              <Input
-                value={whatsappNumber}
-                onChange={e => setWhatsappNumber(e.target.value)}
-                className="bg-silver-two border-0 focus-visible:ring-secondary"
-              />
-            </div>
           </div>
           <div className="flex justify-end">
-            <Button>Save Changes</Button>
+            <Button onClick={handleSave} disabled={isSaving || !profile}>
+              {isSaving ? "Saving..." : "Save Changes"}
+            </Button>
           </div>
         </div>
 
@@ -129,7 +201,7 @@ export default function StorefrontOverviewPage() {
               </div>
               <div>
                 <div className="font-bold text-foreground">Identity & Branding</div>
-                <div className="text-xs text-muted-foreground mt-0.5">Logo, cover image, description, social links</div>
+                <div className="text-xs text-muted-foreground mt-0.5">Logo, cover image, description</div>
               </div>
               <MaterialIcon name="arrow_forward_ios" size={14} color="var(--muted-foreground)" />
             </div>

@@ -41,7 +41,7 @@ const Layout = ({ children }: {
         },
         {
             icon: Store,
-            title: "Storefront",
+            title: "Settings",
             isAvailable: true,
             url: `${base_url}/storefront`,
         }

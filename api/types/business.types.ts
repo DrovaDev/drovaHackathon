@@ -60,6 +60,29 @@ export interface BusinessProfileSetupPayload {
 
 export type BusinessProfileEditPayload = BusinessProfileSetupPayload;
 
+export interface BusinessProfileResponse {
+	id: string;
+	authId: string;
+	isVerified: boolean;
+	businessName: string;
+	businessDescription: string;
+	businessAddress: string;
+	businessState: string;
+	location: BusinessLocationPayload;
+	deliveryScope: DeliveryScope[];
+	fleetSize: number;
+	businessRegistrationNumber: string;
+	taxIdentificationNumber: string;
+	bvn: string;
+	contactNumber: string;
+	businessLogo: string;
+	coverImage: string;
+	slug: string;
+	operatingHours: BusinessOperatingHourPayload[];
+	createdAt: string;
+	updatedAt: string;
+}
+
 export type DeliveryPricingUnit = "km";
 
 export interface IntracityDeliveryPricingBracketPayload {

@@ -6,26 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import MaterialIcon from "@/components/ui/material-icon"
 import Link from "next/link"
+import { Quotation, QuotationStatus, mockQuotations, quotationStatusConfig } from "@/lib/mock-quotations"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type QuotationStatus = "PENDING" | "INVOICED" | "EXPIRED" | "CANCELLED"
 type OrderStatus = "CONFIRMED" | "ASSIGNED" | "EN_ROUTE_PICKUP" | "PICKED_UP" | "IN_TRANSIT" | "DELIVERED" | "COMPLETED" | "DISPUTED" | "CANCELLED"
-
-interface Quotation {
-  id: string
-  senderName: string
-  senderPhone: string
-  senderEmail: string
-  pickupAddress: string
-  deliveryAddress: string
-  packageType: string
-  preferredDate: string
-  submittedAt: string
-  status: QuotationStatus
-  amount?: string
-  nombaPaymentLink?: string
-}
 
 interface Order {
   id: string
@@ -43,14 +28,6 @@ interface Order {
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
-const mockQuotations: Quotation[] = [
-  { id: "QUO-001", senderName: "Amara Obi", senderPhone: "08012345678", senderEmail: "amara@email.com", pickupAddress: "10 Adeola Odeku St, Victoria Island", deliveryAddress: "15 Allen Ave, Ikeja", packageType: "Documents", preferredDate: "2026-07-01", submittedAt: "2026-06-30 09:14", status: "PENDING" },
-  { id: "QUO-002", senderName: "Fatima Bello", senderPhone: "08098765432", senderEmail: "fatima@email.com", pickupAddress: "3 Lekki Phase 1, Lagos", deliveryAddress: "22 Bode Thomas, Surulere", packageType: "Fragile", preferredDate: "2026-07-01", submittedAt: "2026-06-30 08:47", status: "PENDING" },
-  { id: "QUO-003", senderName: "Emeka Nwosu", senderPhone: "07061234567", senderEmail: "emeka@email.com", pickupAddress: "5 Broad St, Lagos Island", deliveryAddress: "40 Market Rd, Oshodi", packageType: "Electronics", preferredDate: "2026-06-30", submittedAt: "2026-06-29 16:22", status: "INVOICED", amount: "₦8,500", nombaPaymentLink: "https://checkout.nomba.com/c/abc123" },
-  { id: "QUO-004", senderName: "Ngozi Adeyemi", senderPhone: "08133456789", senderEmail: "ngozi@email.com", pickupAddress: "7 Awolowo Rd, Ikoyi", deliveryAddress: "Sangotedo, Ajah", packageType: "Clothing", preferredDate: "2026-06-28", submittedAt: "2026-06-27 11:05", status: "EXPIRED" },
-  { id: "QUO-005", senderName: "Chidi Okafor", senderPhone: "08077654321", senderEmail: "chidi@email.com", pickupAddress: "12 CMD Rd, Magodo", deliveryAddress: "Festac Town, Lagos", packageType: "Food Items", preferredDate: "2026-07-02", submittedAt: "2026-06-30 10:01", status: "PENDING" },
-]
-
 const mockOrders: Order[] = [
   { id: "DRV-0042", quotationId: "QUO-006", senderName: "Blessing Eze", pickupAddress: "14 Ozumba Mbadiwe, VI", deliveryAddress: "16 Opebi Rd, Ikeja", packageType: "Documents", assignedRider: "Chukwuemeka D.", status: "IN_TRANSIT", amount: "₦7,500", nombaTxRef: "NMB-TXN-78432", createdAt: "2026-06-30 08:00" },
   { id: "DRV-0041", quotationId: "QUO-007", senderName: "Tunde Williams", pickupAddress: "5 Awolowo Way, Ikoyi", deliveryAddress: "Ikotun-Egbe, Lagos", packageType: "Electronics", assignedRider: "Akin Joseph", status: "PICKED_UP", amount: "₦12,000", nombaTxRef: "NMB-TXN-78431", createdAt: "2026-06-30 07:30" },
@@ -60,13 +37,6 @@ const mockOrders: Order[] = [
 ]
 
 // ─── Status config ────────────────────────────────────────────────────────────
-
-const quotationStatusConfig: Record<QuotationStatus, { label: string; bg: string; text: string }> = {
-  PENDING: { label: "Pending", bg: "bg-amber-100", text: "text-amber-700" },
-  INVOICED: { label: "Invoiced", bg: "bg-blue-100", text: "text-blue-700" },
-  EXPIRED: { label: "Expired", bg: "bg-red-100", text: "text-red-600" },
-  CANCELLED: { label: "Cancelled", bg: "bg-gray-100", text: "text-gray-500" },
-}
 
 const orderStatusConfig: Record<OrderStatus, { label: string; bg: string; text: string; icon: string }> = {
   CONFIRMED: { label: "Confirmed", bg: "bg-blue-100", text: "text-blue-700", icon: "check_circle" },
@@ -142,13 +112,14 @@ function QuotationsTab({ quotations }: { quotations: Quotation[] }) {
                 <th className="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-widest text-muted-foreground hidden md:table-cell">Pickup → Delivery</th>
                 <th className="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-widest text-muted-foreground hidden lg:table-cell">Package</th>
                 <th className="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">Status</th>
+                <th className="text-center px-5 py-3.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">Details</th>
                 <th className="text-right px-5 py-3.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-muted-foreground text-sm">
+                  <td colSpan={7} className="text-center py-12 text-muted-foreground text-sm">
                     No quotations found
                   </td>
                 </tr>
@@ -174,6 +145,14 @@ function QuotationsTab({ quotations }: { quotations: Quotation[] }) {
                     </td>
                     <td className="px-5 py-4">
                       <StatusBadge status={q.status} config={cfg} />
+                    </td>
+                    <td className="px-5 py-4 text-center">
+                      <Link href={`/dashboard/orders/${q.id}`}>
+                        <Button size="sm" variant="ghost" className="text-primary">
+                          <MaterialIcon name="visibility" size={14} color="var(--primary)" />
+                          View Detail
+                        </Button>
+                      </Link>
                     </td>
                     <td className="px-5 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">

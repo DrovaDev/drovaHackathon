@@ -31,6 +31,9 @@ export const auth = router("auth", {
 });
 
 export const business = router("business", {
+	getProfile: router.query({
+		fetcher: businessApi.getProfile,
+	}),
 	profileSetup: router.mutation({
 		mutationFn: businessApi.profileSetup,
 	}),

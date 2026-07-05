@@ -2,6 +2,7 @@ import { getSignupSetupTempToken } from "@/lib/setup-session";
 import { apiClient } from "./client";
 import {
 	BusinessProfileEditPayload,
+	BusinessProfileResponse,
 	BusinessProfileSetupPayload,
 	GetBusinessLookupsResponse,
 	GetBusinessStatesResponse,
@@ -9,6 +10,13 @@ import {
 	ValidateTINPayload,
 } from "./types/business.types";
 import { ApiResponse } from "./types/general.types";
+
+export async function getProfile() {
+	const response = await apiClient.get<ApiResponse<BusinessProfileResponse>>(
+		"/business/profile",
+	);
+	return response.data;
+}
 
 export async function profileSetup(payload: BusinessProfileSetupPayload) {
 	const tempToken = getSignupSetupTempToken();
@@ -55,8 +63,9 @@ export async function getBusinessStates() {
 }
 
 export async function getBusinessLookups() {
-	const response = await apiClient.get<ApiResponse<GetBusinessLookupsResponse>>(
-		"/business/lookups",
-	);
+	const response =
+		await apiClient.get<ApiResponse<GetBusinessLookupsResponse>>(
+			"/business/lookups",
+		);
 	return response.data;
 }

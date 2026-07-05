@@ -9,7 +9,7 @@ const pageTitles: Record<string, string> = {
   "/dashboard/payout": "Payout",
   "/dashboard/storefront/branding": "Identity & Branding",
   "/dashboard/storefront/operations": "Operations",
-  "/dashboard/storefront": "Storefront Settings",
+  "/dashboard/storefront": "Settings",
   "/dashboard/complete-profile": "Complete Profile",
   "/dashboard": "Overview",
 }
