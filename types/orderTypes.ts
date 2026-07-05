@@ -93,6 +93,9 @@ export type Rider = {
   joinedAt: string
 }
 
+// Re-export API rider types for convenience
+export type { RiderProfile, RiderAvailabilityStatus } from "@/api/types/rider.types"
+
 export type WithdrawalRecord = {
   id: string
   amount: number

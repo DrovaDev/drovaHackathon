@@ -2,11 +2,16 @@
 
 import { useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
+import { useQueryClient } from "@tanstack/react-query"
+import { rider, order } from "@/api/router"
+import { RiderProfile } from "@/api/types/rider.types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import MaterialIcon from "@/components/ui/material-icon"
 import Link from "next/link"
 import { Quotation, QuotationStatus, mockQuotations, quotationStatusConfig } from "@/lib/mock-quotations"
+import { toast } from "sonner"
+import { AxiosError } from "axios"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -241,9 +246,32 @@ function QuotationsTab({ quotations }: { quotations: Quotation[] }) {
 }
 
 function OrdersTab({ orders }: { orders: Order[] }) {
+  const queryClient = useQueryClient()
   const [search, setSearch] = useState("")
   const [filter, setFilter] = useState<OrderStatus | "ALL">("ALL")
   const [assignModal, setAssignModal] = useState<Order | null>(null)
+  const [selectedRiderId, setSelectedRiderId] = useState<string | null>(null)
+
+  const { data: ridersData, isLoading: isLoadingRiders } = rider.list.useQuery({
+    enabled: !!assignModal,
+  })
+
+  const availableRiders = (ridersData?.data ?? []).filter(
+    (r: RiderProfile) => r.availabilityStatus === "available"
+  )
+
+  const assignRiderMutation = order.assign.useMutation({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["order"] })
+      toast.success("Rider assigned successfully")
+      setAssignModal(null)
+      setSelectedRiderId(null)
+    },
+    onError: (error: Error) => {
+      const axiosError = error as AxiosError<{ message: string }>
+      toast.error(axiosError.response?.data?.message || "Failed to assign rider")
+    },
+  })
 
   const filtered = orders.filter(o => {
     const matchSearch = o.senderName.toLowerCase().includes(search.toLowerCase()) || o.id.toLowerCase().includes(search.toLowerCase()) || (o.assignedRider ?? "").toLowerCase().includes(search.toLowerCase())
@@ -364,7 +392,7 @@ function OrdersTab({ orders }: { orders: Order[] }) {
           <div className="bg-popover rounded-2xl border border-border p-6 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-base font-bold text-primary">Assign Rider</h3>
-              <button onClick={() => setAssignModal(null)}>
+              <button onClick={() => { setAssignModal(null); setSelectedRiderId(null) }}>
                 <MaterialIcon name="close" size={20} color="var(--muted-foreground)" />
               </button>
             </div>
@@ -374,21 +402,71 @@ function OrdersTab({ orders }: { orders: Order[] }) {
             </div>
             <div className="space-y-2 mb-5">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Available Riders</p>
-              {["Chukwuemeka D.", "Akin Joseph", "Femi Ade", "David O.", "Sola B."].map(r => (
-                <div key={r} className="flex items-center justify-between p-3 rounded-xl border border-border hover:border-secondary/40 cursor-pointer hover:bg-secondary/5 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <MaterialIcon name="person" size={16} color="var(--primary)" />
+              {isLoadingRiders ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-border animate-pulse">
+                      <div className="w-8 h-8 rounded-full bg-muted" />
+                      <div className="h-4 bg-muted rounded w-1/2" />
                     </div>
-                    <span className="text-sm font-semibold text-foreground">{r}</span>
-                  </div>
-                  <span className="w-2 h-2 rounded-full bg-secondary inline-block" />
+                  ))}
                 </div>
-              ))}
+              ) : availableRiders.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground text-sm">
+                  No available riders at the moment
+                </div>
+              ) : (
+                availableRiders.map((r: RiderProfile) => {
+                  const riderName = `${r.firstName ?? ""} ${r.lastName ?? ""}`.trim() || "Unknown"
+                  return (
+                    <div
+                      key={r.id}
+                      onClick={() => setSelectedRiderId(r.id)}
+                      className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-colors ${
+                        selectedRiderId === r.id
+                          ? "border-secondary bg-secondary/5"
+                          : "border-border hover:border-secondary/40 hover:bg-secondary/5"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <MaterialIcon name="person" size={16} color="var(--primary)" />
+                        </div>
+                        <div>
+                          <span className="text-sm font-semibold text-foreground">{riderName}</span>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span>{r.vehicleType}</span>
+                            <span>·</span>
+                            <span>{r.totalDeliveries ?? 0} deliveries</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-0.5">
+                          <MaterialIcon name="star" size={12} color="#D97706" />
+                          <span className="text-xs font-bold">{r.rating}</span>
+                        </div>
+                        {selectedRiderId === r.id && (
+                          <MaterialIcon name="check_circle" size={18} color="var(--secondary)" />
+                        )}
+                      </div>
+                    </div>
+                  )
+                })
+              )}
             </div>
             <div className="flex gap-3">
-              <Button variant="ghost" className="flex-1" onClick={() => setAssignModal(null)}>Cancel</Button>
-              <Button className="flex-1" onClick={() => setAssignModal(null)}>Confirm Assignment</Button>
+              <Button variant="ghost" className="flex-1" onClick={() => { setAssignModal(null); setSelectedRiderId(null) }}>Cancel</Button>
+              <Button
+                className="flex-1"
+                disabled={!selectedRiderId || assignRiderMutation.isPending}
+                onClick={() => {
+                  if (!assignModal || !selectedRiderId) return
+                  assignRiderMutation.mutate({ orderId: assignModal.id, riderId: selectedRiderId })
+                }}
+              >
+                {assignRiderMutation.isPending ? "Assigning..." : "Confirm Assignment"}
+              </Button>
             </div>
           </div>
         </div>
