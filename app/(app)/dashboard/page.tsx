@@ -1,5 +1,7 @@
 "use client"
 
+import { rider } from "@/api/router"
+import { RiderProfile } from "@/api/types/rider.types"
 import MaterialIcon from "@/components/ui/material-icon"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -46,12 +48,6 @@ const stats = [
     badgeColor: "bg-white/20 text-white",
     highlighted: true,
   },
-]
-
-const riderStatus = [
-  { label: "Available", count: 5, color: "bg-secondary", dot: "bg-secondary" },
-  { label: "On Delivery", count: 3, color: "bg-primary", dot: "bg-primary" },
-  { label: "Offline", count: 2, color: "bg-muted-foreground", dot: "bg-muted-foreground" },
 ]
 
 const recentActivity = [
@@ -119,6 +115,20 @@ const quickActions = [
 ]
 
 export default function DashboardHome() {
+  const { data: ridersData } = rider.list.useQuery()
+
+  const riders = ridersData?.data ?? []
+  const availableCount = riders.filter((r: RiderProfile) => r.availabilityStatus === "available").length
+  const onDeliveryCount = riders.filter((r: RiderProfile) => r.availabilityStatus === "on_trip").length
+  const offlineCount = riders.filter((r: RiderProfile) => r.availabilityStatus === "offline").length
+  const totalCount = riders.length
+
+  const riderStatus = [
+    { label: "Available", count: availableCount, color: "bg-secondary", dot: "bg-secondary" },
+    { label: "On Delivery", count: onDeliveryCount, color: "bg-primary", dot: "bg-primary" },
+    { label: "Offline", count: offlineCount, color: "bg-muted-foreground", dot: "bg-muted-foreground" },
+  ]
+
   return (
     <div className="px-6 lg:px-10 py-8 space-y-8">
 
@@ -207,13 +217,17 @@ export default function DashboardHome() {
               <div className="relative w-28 h-28">
                 <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
                   <circle cx="50" cy="50" r="40" fill="none" stroke="var(--border)" strokeWidth="10" />
-                  <circle cx="50" cy="50" r="40" fill="none" stroke="var(--secondary)" strokeWidth="10"
-                    strokeDasharray={`${(5 / 10) * 251} 251`} strokeLinecap="round" />
-                  <circle cx="50" cy="50" r="40" fill="none" stroke="var(--primary)" strokeWidth="10"
-                    strokeDasharray={`${(3 / 10) * 251} 251`} strokeDashoffset={`-${(5 / 10) * 251}`} strokeLinecap="round" />
+                  {totalCount > 0 && (
+                    <>
+                      <circle cx="50" cy="50" r="40" fill="none" stroke="var(--secondary)" strokeWidth="10"
+                        strokeDasharray={`${(availableCount / totalCount) * 251} 251`} strokeLinecap="round" />
+                      <circle cx="50" cy="50" r="40" fill="none" stroke="var(--primary)" strokeWidth="10"
+                        strokeDasharray={`${(onDeliveryCount / totalCount) * 251} 251`} strokeDashoffset={`-${(availableCount / totalCount) * 251}`} strokeLinecap="round" />
+                    </>
+                  )}
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-2xl font-extrabold text-primary">10</span>
+                  <span className="text-2xl font-extrabold text-primary">{totalCount}</span>
                   <span className="text-xs text-muted-foreground">Riders</span>
                 </div>
               </div>

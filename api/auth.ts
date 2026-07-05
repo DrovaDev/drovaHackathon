@@ -77,10 +77,6 @@ export async function resetPassword(payload: ResetPasswordPayload) {
 	return response.data;
 }
 
-// export async function validateRiderLoginOTP(payload){
-//     const response = await
-// }
-
 export async function changePassword(payload: ChangePasswordPayload) {
 	const response = await apiClient.post<ApiResponse>(
 		"/authentication/change-password",
