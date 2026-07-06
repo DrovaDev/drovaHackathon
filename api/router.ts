@@ -4,6 +4,7 @@ import * as businessApi from "./business";
 import * as riderApi from "./rider";
 import { RiderListParams } from "./types/rider.types";
 import * as orderApi from "./order";
+import * as analyticsApi from "./analytics";
 import * as uploadApi from "./upload";
 
 export const auth = router("auth", {
@@ -142,5 +143,44 @@ export const upload = router("upload", {
 	}),
 	cover: router.mutation({
 		mutationFn: uploadApi.uploadCover,
+	}),
+});
+
+export const analytics = router("analytics", {
+	businessSummary: router.query({
+		fetcher: analyticsApi.getBusinessSummary,
+	}),
+	businessOrdersTrend: router.query({
+		fetcher: analyticsApi.getBusinessOrdersTrend,
+	}),
+	businessOrdersBreakdown: router.query({
+		fetcher: analyticsApi.getBusinessOrdersBreakdown,
+	}),
+	businessRevenueBreakdown: router.query({
+		fetcher: analyticsApi.getBusinessRevenueBreakdown,
+	}),
+	businessRidersSummary: router.query({
+		fetcher: analyticsApi.getBusinessRidersSummary,
+	}),
+	businessRidersPerformance: router.query({
+		fetcher: analyticsApi.getBusinessRidersPerformance,
+	}),
+	businessOrdersFulfillment: router.query({
+		fetcher: analyticsApi.getBusinessOrdersFulfillment,
+	}),
+	riderSummary: router.query({
+		fetcher: analyticsApi.getRiderSummary,
+	}),
+	riderEarningsSummary: router.query({
+		fetcher: analyticsApi.getRiderEarningsSummary,
+	}),
+	riderEarningsTrend: router.query({
+		fetcher: analyticsApi.getRiderEarningsTrend,
+	}),
+	riderOrdersTrend: router.query({
+		fetcher: analyticsApi.getRiderOrdersTrend,
+	}),
+	riderPerformance: router.query({
+		fetcher: analyticsApi.getRiderPerformance,
 	}),
 });
