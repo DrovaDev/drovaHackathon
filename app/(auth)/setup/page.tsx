@@ -1,12 +1,12 @@
 "use client";
 
-import { auth, business, upload } from "@/api/router";
+import { auth, business, upload } from "@/services/router";
 import {
 	BusinessOperatingHourPayload,
 	DeliveryScope,
 	GetBusinessLookupsResponse,
 	OperatingDay,
-} from "@/api/types/business.types";
+} from "@/services/types/business.types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

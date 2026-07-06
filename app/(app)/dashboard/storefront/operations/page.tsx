@@ -5,11 +5,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import MaterialIcon from "@/components/ui/material-icon";
-import { business } from "@/api/router";
+import { business } from "@/services/router";
 import {
 	BusinessOperatingHourPayload,
 	DeliveryScope,
-} from "@/api/types/business.types";
+} from "@/services/types/business.types";
 import { MapPin, Store, Globe } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";

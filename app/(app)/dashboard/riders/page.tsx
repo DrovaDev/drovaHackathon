@@ -2,9 +2,9 @@
 
 import { useState, useCallback } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { rider } from "@/api/router"
-import { getAllRiders } from "@/api/rider"
-import { RiderProfile, CreateRiderProfilePayload, UpdateRiderProfilePayload, RiderListParams, RiderInviteStatus, RiderStatus } from "@/api/types/rider.types"
+import { rider } from "@/services/router"
+import { getAllRiders } from "@/services/rider"
+import { RiderProfile, CreateRiderProfilePayload, UpdateRiderProfilePayload, RiderListParams, RiderInviteStatus, RiderStatus } from "@/services/types/rider.types"
 import { Button } from "@/components/ui/button"
 import MaterialIcon from "@/components/ui/material-icon"
 import { toast } from "sonner"

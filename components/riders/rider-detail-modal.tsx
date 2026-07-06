@@ -1,4 +1,4 @@
-import { RiderProfile } from "@/api/types/rider.types"
+import { RiderProfile } from "@/services/types/rider.types"
 import { Button } from "@/components/ui/button"
 import MaterialIcon from "@/components/ui/material-icon"
 import { StarRating } from "./star-rating"

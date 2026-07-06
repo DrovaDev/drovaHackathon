@@ -1,4 +1,4 @@
-import { RevenueBreakdown } from "@/api/types/analytics.types"
+import { RevenueBreakdown } from "@/services/types/analytics.types"
 import MaterialIcon from "@/components/ui/material-icon"
 
 type Props = {
@@ -7,7 +7,7 @@ type Props = {
 }
 
 function formatNaira(amount: number): string {
-	return `₦${(amount ?? 0).toLocaleString()}`
+	return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(amount ?? 0)
 }
 
 function DonutSegment({ value, total, color, offset }: { value: number; total: number; color: string; offset: number }) {

@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import MaterialIcon from "@/components/ui/material-icon"
-import { OrderStatusFilter, OrderPaymentStatus, OrderPickupMethod, OrderDeliveryPriority, SortOrder } from "@/api/types/order.types"
+import { OrderStatusFilter, OrderPaymentStatus, OrderPickupMethod, OrderDeliveryPriority, SortOrder } from "@/services/types/order.types"
 
 type Props = {
 	// Search

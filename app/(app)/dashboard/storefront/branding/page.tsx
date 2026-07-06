@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import MaterialIcon from "@/components/ui/material-icon"
-import { business, upload } from "@/api/router"
+import { business, upload } from "@/services/router"
 import axios from "axios"
 import { toast } from "sonner"
 

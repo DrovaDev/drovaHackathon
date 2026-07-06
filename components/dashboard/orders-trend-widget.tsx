@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { getBusinessOrdersTrend } from "@/api/analytics"
-import { AnalyticsGranularity, OrdersTrendBucket } from "@/api/types/analytics.types"
+import { getBusinessOrdersTrend } from "@/services/analytics"
+import { AnalyticsGranularity, OrdersTrendBucket } from "@/services/types/analytics.types"
 import MaterialIcon from "@/components/ui/material-icon"
 
 type Granularity = AnalyticsGranularity
@@ -114,7 +114,7 @@ export function OrdersTrendWidget() {
 				<div className="flex items-end gap-1.5 h-40 animate-pulse">
 					{[1, 2, 3, 4, 5, 6, 7].map(i => (
 						<div key={i} className="flex-1 flex flex-col items-center justify-end h-36">
-							<div className="w-full max-w-[24px] bg-muted rounded-t-sm" style={{ height: `${30 + Math.random() * 50}%` }} />
+							<div className="w-full max-w-[24px] bg-muted rounded-t-sm" style={{ height: "40%" }} />
 						</div>
 					))}
 				</div>

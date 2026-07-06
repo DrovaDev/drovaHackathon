@@ -1,4 +1,4 @@
-import { RiderProfile } from "@/api/types/rider.types"
+import { RiderProfile } from "@/services/types/rider.types"
 import { RiderCard } from "./rider-card"
 
 type Props = {

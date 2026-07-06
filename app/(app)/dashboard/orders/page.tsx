@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { getOrderStatusConfig } from "@/lib/order-status";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { CreateOrderModal, OrderFilters } from "@/components/orders";
-import { order } from "@/api/router";
+import { order } from "@/services/router";
 import type {
 	Order as OrderRecord,
 	OrderDeliveryPriority,
@@ -27,7 +27,7 @@ import type {
 	OrderStatus,
 	OrderStatusFilter,
 	SortOrder,
-} from "@/api/types/order.types";
+} from "@/services/types/order.types";
 
 const PAGE_SIZE = 10;
 

@@ -13,9 +13,9 @@ import MaterialIcon from "@/components/ui/material-icon"
 import { CustomerInfoCard, MapCard, DeliveryTimeline } from "@/components/orders"
 import { cn } from "@/lib/utils"
 import { useDebouncedValue } from "@/hooks/use-debounced-value"
-import { order, rider } from "@/api/router"
+import { order, rider } from "@/services/router"
 import { getOrderStatusConfig } from "@/lib/order-status"
-import type { OrderStatus, OrderTracking } from "@/api/types/order.types"
+import type { OrderStatus, OrderTracking } from "@/services/types/order.types"
 
 type TrackingKey =
   | "confirmedAt"

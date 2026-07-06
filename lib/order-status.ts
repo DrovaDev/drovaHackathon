@@ -1,4 +1,4 @@
-import type { OrderStatus } from "@/api/types/order.types"
+import type { OrderStatus } from "@/services/types/order.types"
 
 export const orderStatusConfig: Record<
   OrderStatus,

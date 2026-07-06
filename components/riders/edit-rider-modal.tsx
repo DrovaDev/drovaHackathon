@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { RiderProfile, UpdateRiderProfilePayload } from "@/api/types/rider.types"
+import { RiderProfile, UpdateRiderProfilePayload } from "@/services/types/rider.types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import MaterialIcon from "@/components/ui/material-icon"

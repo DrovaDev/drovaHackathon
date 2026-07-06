@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import MaterialIcon from "@/components/ui/material-icon"
-import { CreateRiderProfilePayload } from "@/api/types/rider.types"
+import { CreateRiderProfilePayload } from "@/services/types/rider.types"
 
 type Props = {
 	isOpen: boolean

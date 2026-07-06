@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { BusinessRidersSummary } from "@/api/types/analytics.types"
+import { BusinessRidersSummary } from "@/services/types/analytics.types"
 
 type Props = {
 	data: BusinessRidersSummary | undefined

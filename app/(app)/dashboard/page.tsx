@@ -1,14 +1,14 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { getBusinessSummary, getBusinessRidersSummary, getBusinessRevenueBreakdown, getBusinessOrdersFulfillment } from "@/api/analytics"
+import { getBusinessSummary, getBusinessRidersSummary, getBusinessRevenueBreakdown, getBusinessOrdersFulfillment } from "@/services/analytics"
 import { Button } from "@/components/ui/button"
 import MaterialIcon from "@/components/ui/material-icon"
 import Link from "next/link"
 import { StatCards, StatCard, RiderAvailabilityWidget, QuickActions, RevenueWidget, FulfillmentWidget, OrdersTrendWidget } from "@/components/dashboard"
 
 function formatNaira(amount: number): string {
-	return `₦${(amount ?? 0).toLocaleString()}`
+	return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(amount ?? 0)
 }
 
 export default function DashboardHome() {

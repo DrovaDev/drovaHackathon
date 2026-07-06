@@ -1,4 +1,4 @@
-import { FulfillmentMetrics } from "@/api/types/analytics.types"
+import { FulfillmentMetrics } from "@/services/types/analytics.types"
 import MaterialIcon from "@/components/ui/material-icon"
 
 type Props = {
