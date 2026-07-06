@@ -1,7 +1,7 @@
 "use client"
 
-import { rider } from "@/api/router"
-import { RiderProfile } from "@/api/types/rider.types"
+import { rider } from "@/services/router"
+import { RiderProfile } from "@/services/types/rider.types"
 import MaterialIcon from "@/components/ui/material-icon"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"

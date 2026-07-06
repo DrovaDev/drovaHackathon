@@ -1,6 +1,6 @@
 "use client";
 
-import { auth } from "@/api/router";
+import { auth } from "@/services/router";
 import { Button } from "@/components/ui/button";
 import {
 	Card,

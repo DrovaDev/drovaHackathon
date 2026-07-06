@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import MaterialIcon from "@/components/ui/material-icon"
 import { FilterStatus, filterOptions } from "./utils"
-import { RiderInviteStatus, RiderStatus } from "@/api/types/rider.types"
+import { RiderInviteStatus, RiderStatus } from "@/services/types/rider.types"
 
 type Props = {
 	search: string

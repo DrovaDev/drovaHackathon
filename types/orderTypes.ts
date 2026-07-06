@@ -94,7 +94,7 @@ export type Rider = {
 }
 
 // Re-export API rider types for convenience
-export type { RiderProfile, RiderAvailabilityStatus } from "@/api/types/rider.types"
+export type { RiderProfile, RiderAvailabilityStatus } from "@/services/types/rider.types"
 
 export type WithdrawalRecord = {
   id: string

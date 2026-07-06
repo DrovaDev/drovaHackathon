@@ -1,4 +1,4 @@
-import { RiderAvailabilityStatus } from "@/api/types/rider.types"
+import { RiderAvailabilityStatus } from "@/services/types/rider.types"
 
 export type FilterStatus = "ALL" | RiderAvailabilityStatus
 
