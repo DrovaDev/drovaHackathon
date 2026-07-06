@@ -2,6 +2,7 @@
 
 import { useState, Suspense, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { getOrderStatusConfig } from "@/lib/order-status";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { CreateOrderModal } from "@/components/orders";
 import { order } from "@/api/router";
 import type {
 	Order as OrderRecord,
@@ -818,11 +820,13 @@ function OrdersTab() {
 
 function OrdersContent() {
 	const searchParams = useSearchParams();
+	const queryClient = useQueryClient();
 	const initialTab =
 		searchParams.get("tab") === "orders" ? "orders" : "quotations";
 	const [activeTab, setActiveTab] = useState<"quotations" | "orders">(
 		initialTab,
 	);
+	const [createOrderModalOpen, setCreateOrderModalOpen] = useState(false);
 
 	const { data: quotationsSummary } = order.getQuotations.useQuery({
 		variables: { page: 1, limit: 1 },
@@ -855,6 +859,10 @@ function OrdersContent() {
 						lifecycle
 					</p>
 				</div>
+				<Button onClick={() => setCreateOrderModalOpen(true)}>
+					<MaterialIcon name="add" size={16} color="white" />
+					Create Order
+				</Button>
 			</div>
 
 			{/* Stat summary */}
@@ -942,6 +950,12 @@ function OrdersContent() {
 
 			{/* Tab content */}
 			{activeTab === "quotations" ? <QuotationsTab /> : <OrdersTab />}
+
+			<CreateOrderModal
+				open={createOrderModalOpen}
+				onClose={() => setCreateOrderModalOpen(false)}
+				onCreated={() => queryClient.invalidateQueries({ queryKey: ["order"] })}
+			/>
 		</div>
 	);
 }

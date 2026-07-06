@@ -1,6 +1,7 @@
 import { apiClient } from "./client";
 import { ApiResponse } from "./types/general.types";
 import {
+	CreateDirectOrderPayload,
 	CreateInvoicePayload,
 	GetOrdersParams,
 	GetQuotationsParams,
@@ -51,6 +52,14 @@ export async function resendInvoice(orderId: string) {
 export async function manuallyAssignOrder(payload: ManuallyAssignOrderPayload) {
 	const response = await apiClient.post<ApiResponse>(
 		"/order/assign",
+		payload,
+	);
+	return response.data;
+}
+
+export async function createDirectOrder(payload: CreateDirectOrderPayload) {
+	const response = await apiClient.post<ApiResponse<OrderDetail>>(
+		"/order/direct",
 		payload,
 	);
 	return response.data;

@@ -198,3 +198,63 @@ export interface ManuallyAssignOrderPayload {
 	orderId: string;
 	riderId: string;
 }
+
+export type OrderPaymentMethod = "online" | "cash" | "bank_transfer";
+
+export interface CreateOrderSenderDetails {
+	guestFullName: string;
+	guestContactNumber: string;
+	guestEmail: string;
+}
+
+export interface CreateOrderRecipientDetails {
+	recipientFullName: string;
+	recipientContactNumber: string;
+	recipientEmail: string;
+}
+
+export interface CreateOrderPickupDetails {
+	pickupAddress: string;
+	pickupCoordinates: [longitude: number, latitude: number];
+	pickupCity: string;
+	pickupState: string;
+	pickupNearestLandmark?: string;
+	pickupContactPersonName?: string;
+	pickupContactPersonPhoneNumber?: string;
+}
+
+export interface CreateOrderDeliveryDetails {
+	deliveryAddress: string;
+	deliveryCoordinates: [longitude: number, latitude: number];
+	deliveryState: string;
+	deliveryNearestLandmark?: string;
+}
+
+export interface CreateOrderItemPayload {
+	packageName: string;
+	packageDescription: string;
+	packageType: string;
+	quantity: number;
+	estimatedValue: number;
+	estimatedWeight: number;
+	specialInstructions?: string;
+}
+
+export interface CreateDirectOrderPayload {
+	pickupMethod: OrderPickupMethod;
+	deliveryPriority: OrderDeliveryPriority;
+	preferredDeliveryTime?: string;
+	customerNote?: string;
+	senderDetails: CreateOrderSenderDetails;
+	recipientDetails: CreateOrderRecipientDetails;
+	pickupDetails: CreateOrderPickupDetails;
+	deliveryDetails: CreateOrderDeliveryDetails;
+	items: CreateOrderItemPayload[];
+	pickupInstructions?: string;
+	deliveryInstructions?: string;
+	deliveryFee: number;
+	pickupFee: number;
+	packagingFee: number;
+	note?: string;
+	paymentMethod: OrderPaymentMethod;
+}

@@ -25,6 +25,8 @@ import {
 	storeSignupSetupTempToken,
 } from "@/lib/setup-session";
 import { cn } from "@/lib/utils";
+import { matchState } from "@/lib/match-state";
+import { AddressMapPicker } from "@/components/orders";
 import axios from "axios";
 import {
 	ShieldCheck,
@@ -44,7 +46,6 @@ import {
 	Rocket,
 	Eye,
 	Globe,
-	Navigation,
 	ShieldAlert,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -390,72 +391,42 @@ function Step2({
 							<Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
 								Business Address
 							</Label>
-							<div className="relative">
-								<MapPin
-									size={15}
-									className="absolute left-3 top-1/2 -translate-y-1/2 text-primary"
-								/>
-								<Input
-									className="pl-9"
-									placeholder="Start typing address..."
-									value={details.businessAddress}
-									onChange={(e) =>
+							<AddressMapPicker
+								markerColor="primary"
+								placeholder="Search for your business address..."
+								value={{
+									address: details.businessAddress,
+									longitude:
+										details.longitude !== ""
+											? Number(details.longitude)
+											: null,
+									latitude:
+										details.latitude !== ""
+											? Number(details.latitude)
+											: null,
+								}}
+								onChange={(next) => {
+									onChange("businessAddress", next.address);
+									onChange(
+										"longitude",
+										String(next.longitude),
+									);
+									onChange(
+										"latitude",
+										String(next.latitude),
+									);
+									const matchedState = matchState(
+										next.state,
+										states,
+									);
+									if (matchedState) {
 										onChange(
-											"businessAddress",
-											e.target.value,
-										)
+											"businessState",
+											matchedState,
+										);
 									}
-								/>
-							</div>
-						</div>
-
-						{/* Longitude + Latitude */}
-						<div className="grid grid-cols-2 gap-3 sm:gap-4">
-							<div className="space-y-2">
-								<Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
-									Longitude
-								</Label>
-								<div className="relative">
-									<Navigation
-										size={14}
-										className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-									/>
-									<Input
-										className="pl-9"
-										type="number"
-										step="any"
-										placeholder="e.g. 3.3792"
-										value={details.longitude}
-										onChange={(e) =>
-											onChange(
-												"longitude",
-												e.target.value,
-											)
-										}
-									/>
-								</div>
-							</div>
-							<div className="space-y-2">
-								<Label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
-									Latitude
-								</Label>
-								<div className="relative">
-									<Navigation
-										size={14}
-										className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-									/>
-									<Input
-										className="pl-9"
-										type="number"
-										step="any"
-										placeholder="e.g. 6.5244"
-										value={details.latitude}
-										onChange={(e) =>
-											onChange("latitude", e.target.value)
-										}
-									/>
-								</div>
-							</div>
+								}}
+							/>
 						</div>
 
 						{/* Registration + TIN + BVN */}

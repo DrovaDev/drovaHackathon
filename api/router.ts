@@ -131,6 +131,9 @@ export const order = router("order", {
 	manuallyAssignOrder: router.mutation({
 		mutationFn: orderApi.manuallyAssignOrder,
 	}),
+	createDirectOrder: router.mutation({
+		mutationFn: orderApi.createDirectOrder,
+	}),
 });
 
 export const upload = router("upload", {
