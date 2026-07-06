@@ -260,6 +260,7 @@ function QuotationsTab() {
 							setSortOrder(v as SortOrder);
 							setPage(1);
 						}}
+						items={SORT_OPTIONS}
 					>
 						<SelectTrigger className="w-44">
 							<SelectValue />

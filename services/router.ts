@@ -7,6 +7,7 @@ import * as orderApi from "./order";
 import * as analyticsApi from "./analytics";
 import * as uploadApi from "./upload";
 import * as accountApi from "./account";
+import * as transactionApi from "./transaction";
 
 export const auth = router("auth", {
 	login: router.mutation({
@@ -153,6 +154,12 @@ export const account = router("account", {
 	}),
 	resolveBankAccount: router.mutation({
 		mutationFn: accountApi.resolveBankAccount,
+	}),
+});
+
+export const transaction = router("transaction", {
+	getMyPayouts: router.query({
+		fetcher: transactionApi.getMyPayouts,
 	}),
 });
 

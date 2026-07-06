@@ -14,6 +14,7 @@ function Select({
   onOpenChange,
   disabled,
   name,
+  items,
   children,
 }: React.PropsWithChildren<{
   value?: any
@@ -24,6 +25,11 @@ function Select({
   onOpenChange?: (open: boolean, eventDetails: any) => void
   disabled?: boolean
   name?: string
+  /**
+   * Maps option values to their display labels so `<SelectValue />` renders
+   * the label of the selected item instead of the raw value.
+   */
+  items?: SelectPrimitive.Root.Props<any>["items"]
 }>) {
   return (
     <SelectPrimitive.Root
@@ -35,6 +41,7 @@ function Select({
       onOpenChange={onOpenChange}
       disabled={disabled}
       name={name}
+      items={items}
     >
       {children}
     </SelectPrimitive.Root>

@@ -62,7 +62,15 @@ export default function OperationsPage() {
           <div className="md:col-span-2">
             <div className="relative group">
               <label className="block text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 ml-1">Expansion Range</label>
-              <Select value={scope} onValueChange={setScope}>
+              <Select
+                value={scope}
+                onValueChange={setScope}
+                items={[
+                  { value: "intracity", label: "Intracity Only (Local Delivery)" },
+                  { value: "interstate", label: "Interstate (State-to-State)" },
+                  { value: "both", label: "Both (Intracity & Interstate)" },
+                ]}
+              >
                 <SelectTrigger className="!bg-silver-two !border-0 !border-b-2 !border-transparent rounded-t-xl py-4 px-6">
                   <SelectValue />
                 </SelectTrigger>

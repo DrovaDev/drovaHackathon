@@ -429,7 +429,14 @@ export function CreateOrderModal({ open, onClose, onCreated }: Props) {
             <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Delivery Preferences</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="Pickup Method">
-                <Select value={pickupMethod} onValueChange={(v) => setPickupMethod(v as OrderPickupMethod)}>
+                <Select
+                  value={pickupMethod}
+                  onValueChange={(v) => setPickupMethod(v as OrderPickupMethod)}
+                  items={[
+                    { value: "business_pickup", label: "Business Pickup" },
+                    { value: "walk_in", label: "Walk-in" },
+                  ]}
+                >
                   <SelectTrigger className="bg-silver-two border-0">
                     <SelectValue />
                   </SelectTrigger>
@@ -440,7 +447,14 @@ export function CreateOrderModal({ open, onClose, onCreated }: Props) {
                 </Select>
               </Field>
               <Field label="Delivery Priority">
-                <Select value={deliveryPriority} onValueChange={(v) => setDeliveryPriority(v as OrderDeliveryPriority)}>
+                <Select
+                  value={deliveryPriority}
+                  onValueChange={(v) => setDeliveryPriority(v as OrderDeliveryPriority)}
+                  items={[
+                    { value: "express", label: "Express" },
+                    { value: "scheduled", label: "Scheduled" },
+                  ]}
+                >
                   <SelectTrigger className="bg-silver-two border-0">
                     <SelectValue />
                   </SelectTrigger>
@@ -483,7 +497,15 @@ export function CreateOrderModal({ open, onClose, onCreated }: Props) {
               <Textarea value={pricingNote} onChange={(e) => setPricingNote(e.target.value)} className="bg-silver-two border-0" rows={2} />
             </Field>
             <Field label="Payment Method">
-              <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as OrderPaymentMethod)}>
+              <Select
+                value={paymentMethod}
+                onValueChange={(v) => setPaymentMethod(v as OrderPaymentMethod)}
+                items={[
+                  { value: "online", label: "Online (Nomba Payment Link)" },
+                  { value: "cash", label: "Cash" },
+                  { value: "bank_transfer", label: "Bank Transfer" },
+                ]}
+              >
                 <SelectTrigger className="bg-silver-two border-0">
                   <SelectValue />
                 </SelectTrigger>
