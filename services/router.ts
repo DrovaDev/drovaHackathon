@@ -6,6 +6,7 @@ import { RiderListParams } from "./types/rider.types";
 import * as orderApi from "./order";
 import * as analyticsApi from "./analytics";
 import * as uploadApi from "./upload";
+import * as accountApi from "./account";
 
 export const auth = router("auth", {
 	login: router.mutation({
@@ -134,6 +135,24 @@ export const order = router("order", {
 	}),
 	createDirectOrder: router.mutation({
 		mutationFn: orderApi.createDirectOrder,
+	}),
+});
+
+export const account = router("account", {
+	getPayoutAccount: router.query({
+		fetcher: accountApi.getBusinessPayoutAccount,
+	}),
+	getBanks: router.query({
+		fetcher: accountApi.getBanks,
+	}),
+	createPayoutAccount: router.mutation({
+		mutationFn: accountApi.createBusinessPayoutAccount,
+	}),
+	updatePayoutAccount: router.mutation({
+		mutationFn: accountApi.updateBusinessPayoutAccount,
+	}),
+	resolveBankAccount: router.mutation({
+		mutationFn: accountApi.resolveBankAccount,
 	}),
 });
 

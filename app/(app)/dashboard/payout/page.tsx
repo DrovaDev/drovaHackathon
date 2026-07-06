@@ -1,9 +1,16 @@
 "use client"
 
 import { useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
+import { AxiosError } from "axios"
+import { toast } from "sonner"
+import { account } from "@/services/router"
+import { PayoutAccountPayload } from "@/services/types/account.types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import MaterialIcon from "@/components/ui/material-icon"
+import { PayoutAccountModal } from "@/components/payout/payout-account-modal"
+import { NoPayoutAccountModal } from "@/components/payout/no-payout-account-modal"
 
 type WithdrawalStatus = "PROCESSED" | "PENDING" | "FAILED"
 type PayoutStatus = "PROCESSED" | "PENDING" | "FAILED"
@@ -277,6 +284,50 @@ function RiderPayoutModal({ rider, onClose }: { rider: RiderPayoutRecord; onClos
 export default function PayoutPage() {
   const [withdrawModal, setWithdrawModal] = useState(false)
   const [payoutRider, setPayoutRider] = useState<RiderPayoutRecord | null>(null)
+  const [accountFormOpen, setAccountFormOpen] = useState(false)
+  const [noAccountPromptDismissed, setNoAccountPromptDismissed] = useState(false)
+
+  const queryClient = useQueryClient()
+
+  const { data: payoutAccountData, isLoading: accountLoading, isError: accountIsError, error: accountError } =
+    account.getPayoutAccount.useQuery({ retry: false })
+
+  const payoutAccount = payoutAccountData?.data ?? null
+  const accountNotFound =
+    !accountLoading && (!payoutAccount || (accountIsError && (accountError as AxiosError)?.response?.status === 404))
+  const noAccountPromptOpen = accountNotFound && !noAccountPromptDismissed
+
+  const invalidateAccount = () => queryClient.invalidateQueries({ queryKey: ["account"] })
+
+  const handleAccountError = (error: Error, fallback: string) =>
+    toast.error((error as AxiosError<{ message: string }>).response?.data?.message || fallback)
+
+  const createAccountMutation = account.createPayoutAccount.useMutation({
+    onSuccess: () => {
+      invalidateAccount()
+      toast.success("Payout account added")
+      setAccountFormOpen(false)
+      setNoAccountPromptDismissed(true)
+    },
+    onError: (e) => handleAccountError(e, "Failed to add payout account"),
+  })
+
+  const updateAccountMutation = account.updatePayoutAccount.useMutation({
+    onSuccess: () => {
+      invalidateAccount()
+      toast.success("Payout account updated")
+      setAccountFormOpen(false)
+    },
+    onError: (e) => handleAccountError(e, "Failed to update payout account"),
+  })
+
+  const handleAccountSubmit = (payload: PayoutAccountPayload) => {
+    if (payoutAccount) {
+      updateAccountMutation.mutate(payload)
+    } else {
+      createAccountMutation.mutate(payload)
+    }
+  }
 
   const pendingPayoutsTotal = riderPayouts
     .filter(r => r.status === "PENDING")
@@ -295,6 +346,41 @@ export default function PayoutPage() {
           <MaterialIcon name="verified_user" size={16} color="var(--primary)" />
           <span className="text-xs font-bold text-primary">Powered by Nomba API</span>
         </div>
+      </div>
+
+      {/* Payout Account */}
+      <div className="bg-popover rounded-2xl border border-border p-5 flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <MaterialIcon name="account_balance" size={22} color="var(--primary)" />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Payout Account</div>
+            {accountLoading ? (
+              <div className="text-sm font-semibold text-muted-foreground mt-0.5">Loading account...</div>
+            ) : payoutAccount ? (
+              <>
+                <div className="font-bold text-foreground text-sm">{payoutAccount.accountName}</div>
+                <div className="text-xs text-muted-foreground">{payoutAccount.bankName} · {payoutAccount.accountNumber}</div>
+              </>
+            ) : (
+              <div className="text-sm font-bold text-amber-700 mt-0.5">No bank account added</div>
+            )}
+          </div>
+        </div>
+        {!accountLoading && (
+          payoutAccount ? (
+            <Button size="sm" variant="ghost" onClick={() => setAccountFormOpen(true)}>
+              <MaterialIcon name="edit" size={14} color="var(--primary)" />
+              Edit
+            </Button>
+          ) : (
+            <Button size="sm" onClick={() => setAccountFormOpen(true)}>
+              <MaterialIcon name="add" size={14} color="white" />
+              Add Account
+            </Button>
+          )
+        )}
       </div>
 
       {/* Wallet & summary */}
@@ -466,6 +552,22 @@ export default function PayoutPage() {
 
       {withdrawModal && <WithdrawModal onClose={() => setWithdrawModal(false)} />}
       {payoutRider && <RiderPayoutModal rider={payoutRider} onClose={() => setPayoutRider(null)} />}
+
+      <NoPayoutAccountModal
+        isOpen={noAccountPromptOpen}
+        onClose={() => setNoAccountPromptDismissed(true)}
+        onAddAccount={() => { setNoAccountPromptDismissed(true); setAccountFormOpen(true) }}
+      />
+
+      {accountFormOpen && (
+        <PayoutAccountModal
+          isOpen={accountFormOpen}
+          account={payoutAccount}
+          onClose={() => setAccountFormOpen(false)}
+          onSubmit={handleAccountSubmit}
+          isPending={createAccountMutation.isPending || updateAccountMutation.isPending}
+        />
+      )}
     </div>
   )
 }
