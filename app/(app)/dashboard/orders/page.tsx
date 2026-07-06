@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense, type ReactNode } from "react";
+import { useState, Suspense, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,8 @@ import {
 	SelectItem,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { orderStatusConfig } from "@/lib/order-status";
+import { getOrderStatusConfig } from "@/lib/order-status";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { order } from "@/api/router";
 import type {
 	Order as OrderRecord,
@@ -29,15 +30,6 @@ import type {
 const PAGE_SIZE = 10;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function useDebouncedValue<T>(value: T, delay = 400): T {
-	const [debounced, setDebounced] = useState(value);
-	useEffect(() => {
-		const timeout = setTimeout(() => setDebounced(value), delay);
-		return () => clearTimeout(timeout);
-	}, [value, delay]);
-	return debounced;
-}
 
 function formatNaira(amount: number | null): string {
 	if (amount === null) return "—";
@@ -97,7 +89,7 @@ function getQuotationDisplayStatus(o: OrderRecord): {
 } {
 	if (o.cancelledAt)
 		return { label: "Cancelled", bg: "bg-gray-100", text: "text-gray-500" };
-	if (o.paymentLink)
+	if (o.status === "invoiced")
 		return { label: "Invoiced", bg: "bg-blue-100", text: "text-blue-700" };
 	if (o.offerExpiresAt && new Date(o.offerExpiresAt) < new Date()) {
 		return { label: "Expired", bg: "bg-red-100", text: "text-red-600" };
@@ -108,7 +100,7 @@ function getQuotationDisplayStatus(o: OrderRecord): {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: OrderStatus }) {
-	const cfg = orderStatusConfig[status];
+	const cfg = getOrderStatusConfig(status);
 	return (
 		<span
 			className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wide ${cfg.bg} ${cfg.text}`}
@@ -441,25 +433,6 @@ function QuotationsTab() {
 															View Detail
 														</Button>
 													</Link>
-													{q.paymentLink && (
-														<a
-															href={q.paymentLink}
-															target="_blank"
-															rel="noreferrer"
-														>
-															<Button
-																size="sm"
-																variant="secondary"
-															>
-																<MaterialIcon
-																	name="link"
-																	size={14}
-																	color="white"
-																/>
-																Payment Link
-															</Button>
-														</a>
-													)}
 												</div>
 											</td>
 										</tr>

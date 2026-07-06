@@ -2,6 +2,7 @@ import { apiClient } from "./client";
 import {
 	CreateRiderProfilePayload,
 	ResendRiderOtpPayload,
+	RiderListItem,
 	RiderListParams,
 	RiderProfile,
 	UpdateRiderAvailabilityPayload,
@@ -21,6 +22,14 @@ export async function createRiderProfile(payload: CreateRiderProfilePayload) {
 
 export async function getAllRiders(params?: RiderListParams) {
 	const response = await apiClient.get<ApiResponse<RiderProfile[]>>(
+		"/rider",
+		{ params },
+	);
+	return response.data;
+}
+
+export async function getAssignableRiders(params?: RiderListParams) {
+	const response = await apiClient.get<ApiResponse<RiderListItem[]>>(
 		"/rider",
 		{ params },
 	);

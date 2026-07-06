@@ -1,12 +1,20 @@
 "use client"
 
+import { useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
+import type { AxiosError } from "axios"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
 import MaterialIcon from "@/components/ui/material-icon"
 import { CustomerInfoCard, MapCard, DeliveryTimeline } from "@/components/orders"
-import { order } from "@/api/router"
-import { orderStatusConfig } from "@/lib/order-status"
+import { cn } from "@/lib/utils"
+import { useDebouncedValue } from "@/hooks/use-debounced-value"
+import { order, rider } from "@/api/router"
+import { getOrderStatusConfig } from "@/lib/order-status"
 import type { OrderStatus, OrderTracking } from "@/api/types/order.types"
 
 type TrackingKey =
@@ -86,7 +94,7 @@ function buildTimelineSteps(tracking: OrderTracking) {
 }
 
 function StatusBadge({ status }: { status: OrderStatus }) {
-  const cfg = orderStatusConfig[status]
+  const cfg = getOrderStatusConfig(status)
   return (
     <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wide ${cfg.bg} ${cfg.text}`}>
       <MaterialIcon name={cfg.icon} size={12} color="currentColor" />
@@ -122,10 +130,85 @@ export default function OrderDetailPage() {
   const params = useParams<{ orderId: string }>()
   const router = useRouter()
 
-  const { data, isLoading, isError } = order.getOrder.useQuery({
+  const { data, isLoading, isError, refetch } = order.getOrder.useQuery({
     variables: { id: params.orderId },
   })
   const orderData = data?.data
+
+  const [invoiceModalOpen, setInvoiceModalOpen] = useState(false)
+  const [deliveryFee, setDeliveryFee] = useState("")
+  const [pickupFee, setPickupFee] = useState("")
+  const [packagingFee, setPackagingFee] = useState("")
+  const [note, setNote] = useState("")
+
+  const closeInvoiceModal = () => {
+    setInvoiceModalOpen(false)
+    setDeliveryFee("")
+    setPickupFee("")
+    setPackagingFee("")
+    setNote("")
+  }
+
+  const createInvoiceMutation = order.createInvoice.useMutation({
+    onSuccess: () => {
+      toast.success("Invoice generated successfully")
+      closeInvoiceModal()
+      refetch()
+    },
+    onError: (error) => {
+      toast.error(
+        (error as AxiosError<{ message: string }>).response?.data?.message ||
+          "Failed to generate invoice",
+      )
+    },
+  })
+
+  const resendInvoiceMutation = order.resendInvoice.useMutation({
+    onSuccess: () => {
+      toast.success("Invoice resent successfully")
+      refetch()
+    },
+    onError: (error) => {
+      toast.error(
+        (error as AxiosError<{ message: string }>).response?.data?.message ||
+          "Failed to resend invoice",
+      )
+    },
+  })
+
+  const [assignModalOpen, setAssignModalOpen] = useState(false)
+  const [riderSearch, setRiderSearch] = useState("")
+  const [riderPage, setRiderPage] = useState(1)
+  const [selectedRiderId, setSelectedRiderId] = useState<string | null>(null)
+  const debouncedRiderSearch = useDebouncedValue(riderSearch)
+
+  const closeAssignModal = () => {
+    setAssignModalOpen(false)
+    setRiderSearch("")
+    setRiderPage(1)
+    setSelectedRiderId(null)
+  }
+
+  const { data: ridersData, isLoading: isRidersLoading } = rider.listAssignable.useQuery({
+    variables: { page: riderPage, limit: 8, search: debouncedRiderSearch || undefined },
+    enabled: assignModalOpen,
+  })
+  const riders = ridersData?.data ?? []
+  const ridersMeta = ridersData?.meta
+
+  const manuallyAssignMutation = order.manuallyAssignOrder.useMutation({
+    onSuccess: () => {
+      toast.success("Rider assigned successfully")
+      closeAssignModal()
+      refetch()
+    },
+    onError: (error) => {
+      toast.error(
+        (error as AxiosError<{ message: string }>).response?.data?.message ||
+          "Failed to assign rider",
+      )
+    },
+  })
 
   if (isLoading) {
     return (
@@ -153,6 +236,21 @@ export default function OrderDetailPage() {
   const isQuotationStage =
     orderData.status === "quotation" || orderData.status === "pending" || !orderData.paidAt
 
+  const handleGenerateInvoice = () => {
+    createInvoiceMutation.mutate({
+      id: orderData.id,
+      deliveryFee: Number(deliveryFee) || 0,
+      pickupFee: Number(pickupFee) || 0,
+      packagingFee: Number(packagingFee) || 0,
+      note: note.trim() || undefined,
+    })
+  }
+
+  const handleAssignRider = () => {
+    if (!selectedRiderId) return
+    manuallyAssignMutation.mutate({ orderId: orderData.id, riderId: selectedRiderId })
+  }
+
   return (
     <div className="px-4 sm:px-6 lg:px-10 py-8 space-y-6 max-w-6xl">
       {/* Header */}
@@ -171,14 +269,30 @@ export default function OrderDetailPage() {
           </div>
           <p className="text-muted-foreground text-sm mt-0.5">Created {formatDateTime(orderData.createdAt)}</p>
         </div>
-        {orderData.paymentLink && (
-          <a href={orderData.paymentLink} target="_blank" rel="noreferrer">
-            <Button variant="secondary">
-              <MaterialIcon name="link" size={14} color="white" />
-              Payment Link
+        <div className="flex items-center gap-2">
+          {orderData.status === "pending" && (
+            <Button onClick={() => setInvoiceModalOpen(true)}>
+              <MaterialIcon name="receipt_long" size={14} color="white" />
+              Generate Invoice
             </Button>
-          </a>
-        )}
+          )}
+          {orderData.status === "invoiced" && (
+            <Button
+              variant="secondary"
+              disabled={resendInvoiceMutation.isPending}
+              onClick={() => resendInvoiceMutation.mutate({ id: orderData.id })}
+            >
+              <MaterialIcon name="send" size={14} color="white" />
+              {resendInvoiceMutation.isPending ? "Resending..." : "Resend Invoice"}
+            </Button>
+          )}
+          {orderData.status === "payment_confirmed" && (
+            <Button onClick={() => setAssignModalOpen(true)}>
+              <MaterialIcon name="assignment_ind" size={14} color="white" />
+              Assign Rider
+            </Button>
+          )}
+        </div>
       </div>
 
       {orderData.cancelledAt && (
@@ -413,6 +527,194 @@ export default function OrderDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Generate Invoice Modal */}
+      {invoiceModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-popover rounded-2xl border border-border p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-base font-bold text-primary">Generate Invoice</h3>
+              <button onClick={closeInvoiceModal} className="text-muted-foreground hover:text-foreground">
+                <MaterialIcon name="close" size={20} color="var(--muted-foreground)" />
+              </button>
+            </div>
+            <div className="space-y-1 mb-5 bg-silver-two rounded-xl p-4">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide font-bold">Order</p>
+              <p className="font-bold text-foreground">{orderData.referenceCode} — {orderData.parties.guestFullName}</p>
+              <p className="text-xs text-muted-foreground">
+                {orderData.locations.pickupAddress} → {orderData.locations.deliveryAddress}
+              </p>
+            </div>
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Delivery Fee (₦)</Label>
+                  <Input
+                    type="number"
+                    placeholder="e.g. 3000"
+                    value={deliveryFee}
+                    onChange={(e) => setDeliveryFee(e.target.value)}
+                    className="bg-silver-two border-0 focus-visible:ring-secondary"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Pickup Fee (₦)</Label>
+                  <Input
+                    type="number"
+                    placeholder="e.g. 500"
+                    value={pickupFee}
+                    onChange={(e) => setPickupFee(e.target.value)}
+                    className="bg-silver-two border-0 focus-visible:ring-secondary"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Packaging Fee (₦)</Label>
+                  <Input
+                    type="number"
+                    placeholder="e.g. 500"
+                    value={packagingFee}
+                    onChange={(e) => setPackagingFee(e.target.value)}
+                    className="bg-silver-two border-0 focus-visible:ring-secondary"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Note (optional)</Label>
+                <Textarea
+                  placeholder="e.g. Includes fragile item handling surcharge"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  className="bg-silver-two border-0 focus-visible:ring-secondary"
+                  rows={3}
+                />
+              </div>
+              <div className="pt-2">
+                <p className="text-xs text-muted-foreground mb-1">
+                  A Nomba payment link will be generated and sent to the customer.
+                </p>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button variant="ghost" className="flex-1" onClick={closeInvoiceModal}>
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1"
+                  disabled={!deliveryFee || !pickupFee || !packagingFee || createInvoiceMutation.isPending}
+                  onClick={handleGenerateInvoice}
+                >
+                  <MaterialIcon name="send" size={14} color="white" />
+                  {createInvoiceMutation.isPending ? "Sending..." : "Send Invoice"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Rider Modal */}
+      {assignModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-popover rounded-2xl border border-border p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-base font-bold text-primary">Assign Rider</h3>
+              <button onClick={closeAssignModal} className="text-muted-foreground hover:text-foreground">
+                <MaterialIcon name="close" size={20} color="var(--muted-foreground)" />
+              </button>
+            </div>
+
+            <Input
+              placeholder="Search riders..."
+              value={riderSearch}
+              onChange={(e) => {
+                setRiderSearch(e.target.value)
+                setRiderPage(1)
+                setSelectedRiderId(null)
+              }}
+              className="bg-silver-two border-0 focus-visible:ring-secondary mb-4"
+            />
+
+            <div className="space-y-2 mb-4 min-h-[220px] max-h-72 overflow-y-auto">
+              {isRidersLoading && (
+                <p className="text-sm text-muted-foreground text-center py-10">Loading riders...</p>
+              )}
+              {!isRidersLoading && riders.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-10">No riders found</p>
+              )}
+              {!isRidersLoading &&
+                riders.map((r) => {
+                  const name = r.firstName && r.lastName ? `${r.firstName} ${r.lastName}` : r.phoneNumber
+                  const isSelected = selectedRiderId === r.id
+                  return (
+                    <div
+                      key={r.id}
+                      onClick={() => setSelectedRiderId(r.id)}
+                      className={cn(
+                        "flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-colors",
+                        isSelected ? "border-secondary bg-secondary/5" : "border-border hover:border-secondary/40 hover:bg-secondary/5",
+                      )}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        {r.profilePhoto ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={r.profilePhoto} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <MaterialIcon name="person" size={16} color="var(--primary)" />
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-foreground truncate">{name}</p>
+                          <p className="text-xs text-muted-foreground">{r.phoneNumber}</p>
+                        </div>
+                      </div>
+                      <span
+                        className={cn(
+                          "w-2 h-2 rounded-full shrink-0",
+                          r.availabilityStatus === "available" ? "bg-secondary" : "bg-muted-foreground/30",
+                        )}
+                      />
+                    </div>
+                  )
+                })}
+            </div>
+
+            {ridersMeta && ridersMeta.totalPages && ridersMeta.totalPages > 1 && (
+              <div className="flex items-center justify-between mb-4">
+                <button
+                  className="text-xs font-bold text-muted-foreground disabled:opacity-30"
+                  disabled={riderPage <= 1}
+                  onClick={() => setRiderPage((p) => p - 1)}
+                >
+                  Previous
+                </button>
+                <span className="text-xs text-muted-foreground">
+                  Page {riderPage} of {ridersMeta.totalPages}
+                </span>
+                <button
+                  className="text-xs font-bold text-muted-foreground disabled:opacity-30"
+                  disabled={riderPage >= (ridersMeta.totalPages ?? 1)}
+                  onClick={() => setRiderPage((p) => p + 1)}
+                >
+                  Next
+                </button>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <Button variant="ghost" className="flex-1" onClick={closeAssignModal}>
+                Cancel
+              </Button>
+              <Button
+                className="flex-1"
+                disabled={!selectedRiderId || manuallyAssignMutation.isPending}
+                onClick={handleAssignRider}
+              >
+                {manuallyAssignMutation.isPending ? "Assigning..." : "Confirm Assignment"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

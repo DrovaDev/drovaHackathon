@@ -60,9 +60,13 @@ export const business = router("business", {
 export const rider = router("rider", {
 	list: router.query({
 		fetcher: async (variables: { queryKey: readonly unknown[] }) => {
-			const params = variables.queryKey[2] as RiderListParams | undefined
-			return riderApi.getAllRiders(params)
+			const params = variables.queryKey[2] as RiderListParams | undefined;
+			return riderApi.getAllRiders(params);
 		},
+	}),
+	listAssignable: router.query({
+		fetcher: (variables: RiderListParams) =>
+			riderApi.getAssignableRiders(variables),
 	}),
 	getById: router.query({
 		fetcher: ({ queryKey }) => {
@@ -77,21 +81,24 @@ export const rider = router("rider", {
 		mutationFn: riderApi.updateRiderProfile,
 	}),
 	delete: router.mutation({
-		mutationFn: ({ riderId }: { riderId: string }) => riderApi.deleteRider(riderId),
+		mutationFn: ({ riderId }: { riderId: string }) =>
+			riderApi.deleteRider(riderId),
 	}),
 	updateAvailability: router.mutation({
 		mutationFn: ({
 			riderId,
 			...payload
-		}: { riderId: string } & Parameters<typeof riderApi.updateRiderAvailability>[1]) =>
-			riderApi.updateRiderAvailability(riderId, payload),
+		}: { riderId: string } & Parameters<
+			typeof riderApi.updateRiderAvailability
+		>[1]) => riderApi.updateRiderAvailability(riderId, payload),
 	}),
 	updateLocation: router.mutation({
 		mutationFn: ({
 			riderId,
 			...payload
-		}: { riderId: string } & Parameters<typeof riderApi.updateRiderLocation>[1]) =>
-			riderApi.updateRiderLocation(riderId, payload),
+		}: { riderId: string } & Parameters<
+			typeof riderApi.updateRiderLocation
+		>[1]) => riderApi.updateRiderLocation(riderId, payload),
 	}),
 	resendOtp: router.mutation({
 		mutationFn: riderApi.resendRiderOtp,
@@ -110,6 +117,19 @@ export const order = router("order", {
 	}),
 	getOrder: router.query({
 		fetcher: (variables: { id: string }) => orderApi.getOrder(variables.id),
+	}),
+	createInvoice: router.mutation({
+		mutationFn: ({
+			id,
+			...payload
+		}: { id: string } & Parameters<typeof orderApi.createInvoice>[1]) =>
+			orderApi.createInvoice(id, payload),
+	}),
+	resendInvoice: router.mutation({
+		mutationFn: ({ id }: { id: string }) => orderApi.resendInvoice(id),
+	}),
+	manuallyAssignOrder: router.mutation({
+		mutationFn: orderApi.manuallyAssignOrder,
 	}),
 });
 

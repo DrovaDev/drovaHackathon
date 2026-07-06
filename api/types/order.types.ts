@@ -5,6 +5,7 @@ export type OrderStatus =
 	| "quotation"
 	| "payment_confirmed"
 	| "offer_pending"
+	| "invoiced"
 	| "assigned"
 	| "en_route_pickup"
 	| "picked_up"
@@ -184,4 +185,16 @@ export type GetQuotationsParams = Pick<
 
 export interface OrderDetail extends Order {
 	business: BusinessProfileResponse;
+}
+
+export interface CreateInvoicePayload {
+	deliveryFee: number;
+	pickupFee: number;
+	packagingFee: number;
+	note?: string;
+}
+
+export interface ManuallyAssignOrderPayload {
+	orderId: string;
+	riderId: string;
 }

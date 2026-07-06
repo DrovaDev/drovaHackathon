@@ -91,3 +91,44 @@ export interface RiderListParams {
 	startDate?: string
 	endDate?: string
 }
+
+export interface RiderAuthSummary {
+	id: string
+	email: string | null
+	telephoneNumber: string
+	userType: string
+	isActive: boolean
+	isVerified: boolean
+	isSuspended: boolean
+	isDeleted: boolean
+	hasCompletedBusinessProfile: boolean | null
+	createdAt: string
+	updatedAt: string
+}
+
+export interface RiderListItem {
+	id: string
+	authId: string
+	businessId: string
+	firstName: string | null
+	lastName: string | null
+	otherName: string | null
+	phoneNumber: string
+	profilePhoto: string | null
+	vehicleType: RiderVehicleType | null
+	vehiclePlateNumber: string | null
+	vehicleModel: string | null
+	vehicleColor: string | null
+	status: RiderStatus
+	isDeleted: boolean
+	hasChangedPassword: boolean
+	inviteStatus: RiderInviteStatus
+	availabilityStatus: RiderAvailabilityStatus
+	lastKnownLocation: { type: "Point"; coordinates: [number, number] } | null
+	lastLocationUpdatedAt: string | null
+	activeDeviceId: string | null
+	sessionId: string | null
+	auth: RiderAuthSummary
+	createdAt: string
+	updatedAt: string
+}
