@@ -17,7 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { getOrderStatusConfig } from "@/lib/order-status";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
-import { CreateOrderModal } from "@/components/orders";
+import { CreateOrderModal, OrderFilters } from "@/components/orders";
 import { order } from "@/services/router";
 import type {
 	Order as OrderRecord,
@@ -508,149 +508,25 @@ function OrdersTab() {
 	return (
 		<div className="space-y-5">
 			{/* Filters */}
-			<div className="flex flex-wrap items-end gap-3">
-				<FilterField label="Search" className="flex-1 max-w-xs">
-					<Input
-						placeholder="Search orders, riders..."
-						value={search}
-						onChange={(e) => {
-							setSearch(e.target.value);
-							setPage(1);
-						}}
-						className="bg-silver-two border-0 focus-visible:ring-secondary"
-					/>
-				</FilterField>
-				<FilterField label="Status">
-					<Select
-						value={status}
-						onValueChange={(v) => {
-							setStatus(v as OrderStatusFilter);
-							setPage(1);
-						}}
-					>
-						<SelectTrigger className="w-52">
-							<SelectValue />
-						</SelectTrigger>
-						<SelectPopup>
-							{ORDER_STATUS_FILTERS.map((s) => (
-								<SelectItem key={s.value} value={s.value}>
-									{s.label}
-								</SelectItem>
-							))}
-						</SelectPopup>
-					</Select>
-				</FilterField>
-				<FilterField label="Sort By">
-					<Select
-						value={sortOrder}
-						onValueChange={(v) => {
-							setSortOrder(v as SortOrder);
-							setPage(1);
-						}}
-					>
-						<SelectTrigger className="w-44">
-							<SelectValue />
-						</SelectTrigger>
-						<SelectPopup>
-							{SORT_OPTIONS.map((s) => (
-								<SelectItem key={s.value} value={s.value}>
-									{s.label}
-								</SelectItem>
-							))}
-						</SelectPopup>
-					</Select>
-				</FilterField>
-				<FilterField label="Payment Status">
-					<Select
-						value={paymentStatus}
-						onValueChange={(v) => {
-							setPaymentStatus(v as "all" | OrderPaymentStatus);
-							setPage(1);
-						}}
-					>
-						<SelectTrigger className="w-52">
-							<SelectValue />
-						</SelectTrigger>
-						<SelectPopup>
-							{PAYMENT_STATUS_FILTERS.map((s) => (
-								<SelectItem key={s.value} value={s.value}>
-									{s.label}
-								</SelectItem>
-							))}
-						</SelectPopup>
-					</Select>
-				</FilterField>
-				<FilterField label="Pickup Method">
-					<Select
-						value={pickupMethod}
-						onValueChange={(v) => {
-							setPickupMethod(v as "all" | OrderPickupMethod);
-							setPage(1);
-						}}
-					>
-						<SelectTrigger className="w-48">
-							<SelectValue />
-						</SelectTrigger>
-						<SelectPopup>
-							{PICKUP_METHOD_FILTERS.map((s) => (
-								<SelectItem key={s.value} value={s.value}>
-									{s.label}
-								</SelectItem>
-							))}
-						</SelectPopup>
-					</Select>
-				</FilterField>
-				<FilterField label="Delivery Priority">
-					<Select
-						value={deliveryPriority}
-						onValueChange={(v) => {
-							setDeliveryPriority(v as "all" | OrderDeliveryPriority);
-							setPage(1);
-						}}
-					>
-						<SelectTrigger className="w-44">
-							<SelectValue />
-						</SelectTrigger>
-						<SelectPopup>
-							{DELIVERY_PRIORITY_FILTERS.map((s) => (
-								<SelectItem key={s.value} value={s.value}>
-									{s.label}
-								</SelectItem>
-							))}
-						</SelectPopup>
-					</Select>
-				</FilterField>
-				<FilterField label="From">
-					<Input
-						type="date"
-						value={startDate}
-						onChange={(e) => {
-							setStartDate(e.target.value);
-							setPage(1);
-						}}
-						className="w-40 bg-silver-two border-0 focus-visible:ring-secondary"
-					/>
-				</FilterField>
-				<FilterField label="To">
-					<Input
-						type="date"
-						value={endDate}
-						onChange={(e) => {
-							setEndDate(e.target.value);
-							setPage(1);
-						}}
-						className="w-40 bg-silver-two border-0 focus-visible:ring-secondary"
-					/>
-				</FilterField>
-				{hasActiveFilters && (
-					<button
-						onClick={clearFilters}
-						className="text-xs font-bold text-secondary hover:underline pb-2.5"
-					>
-						Clear filters
-					</button>
-				)}
-			</div>
+			<OrderFilters
+				search={search}
+				onSearchChange={(v) => { setSearch(v); setPage(1) }}
+				status={status}
+				onStatusChange={(v) => { setStatus(v); setPage(1) }}
+				sortOrder={sortOrder}
+				onSortOrderChange={(v) => { setSortOrder(v); setPage(1) }}
+				paymentStatus={paymentStatus}
+				onPaymentStatusChange={(v) => { setPaymentStatus(v); setPage(1) }}
+				pickupMethod={pickupMethod}
+				onPickupMethodChange={(v) => { setPickupMethod(v); setPage(1) }}
+				deliveryPriority={deliveryPriority}
+				onDeliveryPriorityChange={(v) => { setDeliveryPriority(v); setPage(1) }}
+				startDate={startDate}
+				onStartDateChange={(v) => { setStartDate(v); setPage(1) }}
+				endDate={endDate}
+				onEndDateChange={(v) => { setEndDate(v); setPage(1) }}
+				onClearFilters={clearFilters}
+			/>
 
 			{/* Table */}
 			<div className="bg-popover rounded-2xl border border-border overflow-hidden">
