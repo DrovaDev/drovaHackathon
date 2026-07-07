@@ -55,7 +55,8 @@ export interface RiderProfile {
 	lastName: string
 	otherName?: string
 	email?: string
-	telephoneNumber: string
+	phoneNumber?: string
+	telephoneNumber?: string
 	profilePhoto?: string
 	vehicleType: RiderVehicleType
 	vehiclePlateNumber?: string
@@ -75,6 +76,8 @@ export interface RiderProfile {
 		latitude: number
 		longitude: number
 	}
+	lastKnownLocation?: { type: "Point"; coordinates: [number, number] } | null
+	lastLocationUpdatedAt?: string | null
 	createdAt: string
 	updatedAt: string
 }
