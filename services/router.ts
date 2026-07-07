@@ -178,6 +178,9 @@ export const transaction = router("transaction", {
 	requestPayout: router.mutation({
 		mutationFn: transactionApi.requestPayout,
 	}),
+	riderTransfer: router.mutation({
+		mutationFn: transactionApi.riderTransfer,
+	}),
 });
 
 export const wallet = router("wallet", {

@@ -13,7 +13,7 @@ import MaterialIcon from "@/components/ui/material-icon"
 import { CustomerInfoCard, MapCard, DeliveryTimeline } from "@/components/orders"
 import { cn } from "@/lib/utils"
 import { useDebouncedValue } from "@/hooks/use-debounced-value"
-import { order, rider } from "@/services/router"
+import { order, rider, transaction } from "@/services/router"
 import { getOrderStatusConfig } from "@/lib/order-status"
 import type { OrderStatus, OrderTracking } from "@/services/types/order.types"
 
@@ -210,6 +210,28 @@ export default function OrderDetailPage() {
     },
   })
 
+  const [payRiderModalOpen, setPayRiderModalOpen] = useState(false)
+  const [riderPayAmount, setRiderPayAmount] = useState("")
+
+  const closePayRiderModal = () => {
+    setPayRiderModalOpen(false)
+    setRiderPayAmount("")
+  }
+
+  const payRiderMutation = transaction.riderTransfer.useMutation({
+    onSuccess: () => {
+      toast.success("Rider paid successfully")
+      closePayRiderModal()
+      refetch()
+    },
+    onError: (error) => {
+      toast.error(
+        (error as AxiosError<{ message: string }>).response?.data?.message ||
+          "Failed to pay rider",
+      )
+    },
+  })
+
   if (isLoading) {
     return (
       <div className="px-6 lg:px-10 py-8 text-muted-foreground text-sm">Loading order...</div>
@@ -251,6 +273,18 @@ export default function OrderDetailPage() {
     manuallyAssignMutation.mutate({ orderId: orderData.id, riderId: selectedRiderId })
   }
 
+  const canPayRider =
+    !orderData.riderFundedAt && !orderData.riderFundedAmount && !!orderData.riderId
+
+  const handlePayRider = () => {
+    if (!orderData.riderId || !riderPayAmount) return
+    payRiderMutation.mutate({
+      orderId: orderData.id,
+      riderId: orderData.riderId,
+      amount: Number(riderPayAmount),
+    })
+  }
+
   return (
     <div className="px-4 sm:px-6 lg:px-10 py-8 space-y-6 max-w-6xl">
       {/* Header */}
@@ -290,6 +324,12 @@ export default function OrderDetailPage() {
             <Button onClick={() => setAssignModalOpen(true)}>
               <MaterialIcon name="assignment_ind" size={14} color="white" />
               Assign Rider
+            </Button>
+          )}
+          {canPayRider && (
+            <Button onClick={() => setPayRiderModalOpen(true)}>
+              <MaterialIcon name="payments" size={14} color="white" />
+              Pay Rider
             </Button>
           )}
         </div>
@@ -414,7 +454,13 @@ export default function OrderDetailPage() {
                 <SummaryRow label="Delivery Fee" value={formatNaira(orderData.deliveryFee)} />
                 <SummaryRow label="Pickup Fee" value={formatNaira(orderData.pickupFee)} />
                 <SummaryRow label="Packaging Fee" value={formatNaira(orderData.packagingFee)} />
-                <SummaryRow label="Service Fee" value={formatNaira(orderData.serviceFee)} />
+                <SummaryRow label="Platform Fee" value={formatNaira(orderData.serviceFee)} />
+                {orderData.priceBreakdown && (
+                  <SummaryRow
+                    label="Payment Processing Fee"
+                    value={formatNaira(orderData.priceBreakdown.nombaFee)}
+                  />
+                )}
               </div>
               <div className="pt-3 border-t border-border/60 flex items-center justify-between">
                 <span className="text-muted-foreground font-medium">Total Amount</span>
@@ -433,6 +479,12 @@ export default function OrderDetailPage() {
                 {orderData.invoiceSentAt && <SummaryRow label="Invoice Sent" value={formatDateTime(orderData.invoiceSentAt)} />}
                 {orderData.paidAt && <SummaryRow label="Paid At" value={formatDateTime(orderData.paidAt)} />}
                 {orderData.offerExpiresAt && <SummaryRow label="Offer Expires" value={formatDateTime(orderData.offerExpiresAt)} />}
+                {orderData.riderFundedAt && (
+                  <SummaryRow label="Rider Paid" value={formatNaira(orderData.riderFundedAmount)} />
+                )}
+                {orderData.riderFundedAt && (
+                  <SummaryRow label="Rider Funded At" value={formatDateTime(orderData.riderFundedAt)} />
+                )}
               </div>
             </div>
           )}
@@ -711,6 +763,54 @@ export default function OrderDetailPage() {
               >
                 {manuallyAssignMutation.isPending ? "Assigning..." : "Confirm Assignment"}
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pay Rider Modal */}
+      {payRiderModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-popover rounded-2xl border border-border p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-base font-bold text-primary">Pay Rider</h3>
+              <button onClick={closePayRiderModal} className="text-muted-foreground hover:text-foreground">
+                <MaterialIcon name="close" size={20} color="var(--muted-foreground)" />
+              </button>
+            </div>
+            {orderData.rider && (
+              <div className="space-y-1 mb-5 bg-silver-two rounded-xl p-4">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide font-bold">Rider</p>
+                <p className="font-bold text-foreground">
+                  {orderData.rider.firstName} {orderData.rider.lastName}
+                </p>
+                <p className="text-xs text-muted-foreground">{orderData.rider.phoneNumber}</p>
+              </div>
+            )}
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Amount (₦)</Label>
+                <Input
+                  type="number"
+                  placeholder="e.g. 2500"
+                  value={riderPayAmount}
+                  onChange={(e) => setRiderPayAmount(e.target.value)}
+                  className="bg-silver-two border-0 focus-visible:ring-secondary"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button variant="ghost" className="flex-1" onClick={closePayRiderModal}>
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1"
+                  disabled={!riderPayAmount || Number(riderPayAmount) <= 0 || payRiderMutation.isPending}
+                  onClick={handlePayRider}
+                >
+                  <MaterialIcon name="payments" size={14} color="white" />
+                  {payRiderMutation.isPending ? "Paying..." : "Pay Rider"}
+                </Button>
+              </div>
             </div>
           </div>
         </div>

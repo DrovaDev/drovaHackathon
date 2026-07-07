@@ -79,7 +79,7 @@ export function NotificationBell() {
 						animate={{ opacity: 1, y: 0, scale: 1 }}
 						exit={{ opacity: 0, y: -8, scale: 0.98 }}
 						transition={{ duration: 0.15, ease: "easeOut" }}
-						className="absolute right-0 mt-3 w-80 sm:w-96 bg-popover rounded-2xl border border-border shadow-2xl overflow-hidden z-50"
+						className="fixed left-4 right-4 top-22 lg:absolute lg:left-auto lg:right-0 lg:top-auto lg:mt-3 lg:w-96 bg-popover rounded-2xl border border-border shadow-2xl overflow-hidden z-50"
 					>
 						<div className="flex items-center justify-between px-4 py-3 border-b border-border">
 							<h3 className="text-sm font-bold text-foreground">

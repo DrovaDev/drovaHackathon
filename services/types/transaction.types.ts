@@ -89,3 +89,9 @@ export interface GetTransactionsParams {
 	sortOrder?: PayoutSortOrder;
 	search?: string;
 }
+
+export interface RiderTransferPayload {
+	riderId: string;
+	amount: number;
+	orderId: string;
+}

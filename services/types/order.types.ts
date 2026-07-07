@@ -80,6 +80,15 @@ export interface OrderLocations {
 	updatedAt: string;
 }
 
+export interface OrderPriceBreakdown {
+	pickupFee: number;
+	serviceFee: number;
+	deliveryFee: number;
+	packagingFee: number;
+	nombaFee: number;
+	totalAmount: number;
+}
+
 export interface OrderTracking {
 	id: string;
 	orderId: string;
@@ -146,7 +155,7 @@ export interface Order {
 	paymentReference: string | null;
 	paymentLink: string | null;
 	totalAmount: number | null;
-	priceBreakdown: Record<string, unknown> | null;
+	priceBreakdown: OrderPriceBreakdown | null;
 	invoiceSentAt: string | null;
 	isDeleted: boolean;
 	offerExpiresAt: string | null;
@@ -156,6 +165,8 @@ export interface Order {
 	paidAt: string | null;
 	escrowHeldAt: string | null;
 	escrowReleasedAt: string | null;
+	riderFundedAt: string | null;
+	riderFundedAmount: number | null;
 	rider: OrderRider | null;
 	items: OrderItem[];
 	parties: OrderParties;
