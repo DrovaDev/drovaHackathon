@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
-import { account, transaction } from "@/services/router";
+import { account, transaction, wallet } from "@/services/router";
 import { PayoutAccountPayload } from "@/services/types/account.types";
 import {
 	GetMyPayoutsParams,
+	GetTransactionsParams,
 	PayoutTransactionStatusFilter,
 } from "@/services/types/transaction.types";
 import { Button } from "@/components/ui/button";
@@ -24,10 +26,11 @@ import { PayoutAccountModal } from "@/components/payout/payout-account-modal";
 import { NoPayoutAccountModal } from "@/components/payout/no-payout-account-modal";
 import { Pagination } from "@/components/riders/pagination";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
-
-type PayoutStatus = "PROCESSED" | "PENDING" | "FAILED";
+import { cacheRiderPayoutTransaction } from "@/lib/rider-payout-cache";
+import { getRiderPayoutStatusConfig } from "@/lib/rider-payout-status";
 
 const WITHDRAWAL_PAGE_SIZE = 10;
+const RIDER_PAYOUT_PAGE_SIZE = 10;
 
 const withdrawalStatusConfig: Record<
 	Exclude<PayoutTransactionStatusFilter, "all">,
@@ -93,6 +96,15 @@ function formatNaira(amount: number): string {
 	}).format(amount);
 }
 
+function formatNairaDecimal(amount: number): string {
+	return new Intl.NumberFormat("en-NG", {
+		style: "currency",
+		currency: "NGN",
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2,
+	}).format(amount);
+}
+
 function formatDateTime(iso: string): string {
 	return new Date(iso).toLocaleString("en-NG", {
 		year: "numeric",
@@ -103,142 +115,28 @@ function formatDateTime(iso: string): string {
 	});
 }
 
-interface RiderPayoutRecord {
-	riderId: string;
-	riderName: string;
-	vehicle: string;
-	completedDeliveries: number;
-	perDelivery: string;
-	totalDue: string;
-	lastPayout: string;
-	status: PayoutStatus;
-	nombaTxRef?: string;
-	bankName: string;
-}
-
-const riderPayouts: RiderPayoutRecord[] = [
-	{
-		riderId: "RID-001",
-		riderName: "Chukwuemeka Dike",
-		vehicle: "Motorcycle",
-		completedDeliveries: 12,
-		perDelivery: "₦3,500",
-		totalDue: "₦42,000",
-		lastPayout: "2026-06-21",
-		status: "PENDING",
-		bankName: "First Bank",
-	},
-	{
-		riderId: "RID-002",
-		riderName: "Akin Joseph",
-		vehicle: "Motorcycle",
-		completedDeliveries: 18,
-		perDelivery: "₦3,500",
-		totalDue: "₦63,000",
-		lastPayout: "2026-06-14",
-		status: "PENDING",
-		bankName: "GTBank",
-	},
-	{
-		riderId: "RID-003",
-		riderName: "Femi Ade",
-		vehicle: "Van",
-		completedDeliveries: 8,
-		perDelivery: "₦4,200",
-		totalDue: "₦33,600",
-		lastPayout: "2026-06-21",
-		status: "PENDING",
-		bankName: "Access Bank",
-	},
-	{
-		riderId: "RID-004",
-		riderName: "David Okoye",
-		vehicle: "Electric Moped",
-		completedDeliveries: 11,
-		perDelivery: "₦3,200",
-		totalDue: "₦35,200",
-		lastPayout: "2026-06-21",
-		status: "PROCESSED",
-		nombaTxRef: "NMB-TRF-43190",
-		bankName: "Zenith Bank",
-	},
-	{
-		riderId: "RID-005",
-		riderName: "Sola Badmus",
-		vehicle: "Motorcycle",
-		completedDeliveries: 6,
-		perDelivery: "₦3,500",
-		totalDue: "₦21,000",
-		lastPayout: "2026-06-14",
-		status: "PENDING",
-		bankName: "UBA",
-	},
-];
-
-const statusConfig = {
-	PROCESSED: {
-		label: "Processed",
-		bg: "bg-secondary/10",
-		text: "text-secondary-two",
-		icon: "check_circle",
-	},
-	PENDING: {
-		label: "Pending",
-		bg: "bg-amber-100",
-		text: "text-amber-700",
-		icon: "schedule",
-	},
-	FAILED: {
-		label: "Failed",
-		bg: "bg-red-100",
-		text: "text-red-600",
-		icon: "error",
-	},
-};
-
-const banks = [
-	"Access Bank",
-	"Citibank",
-	"Ecobank",
-	"Fidelity Bank",
-	"First Bank of Nigeria",
-	"First City Monument Bank",
-	"Globus Bank",
-	"GTBank",
-	"Heritage Bank",
-	"Keystone Bank",
-	"Kuda Bank",
-	"Opay",
-	"Palmpay",
-	"Polaris Bank",
-	"Providus Bank",
-	"Stanbic IBTC",
-	"Standard Chartered",
-	"Sterling Bank",
-	"SunTrust Bank",
-	"UBA",
-	"Union Bank",
-	"Unity Bank",
-	"VFD Microfinance Bank",
-	"Wema Bank",
-	"Zenith Bank",
-];
-
 function WithdrawModal({ onClose }: { onClose: () => void }) {
-	const [step, setStep] = useState<"amount" | "confirm">("amount");
 	const [amount, setAmount] = useState("");
-	const [bank, setBank] = useState("");
-	const [accountNumber, setAccountNumber] = useState("");
-	const [accountName, setAccountName] = useState("");
-	const [looking, setLooking] = useState(false);
+	const queryClient = useQueryClient();
 
-	const lookupAccount = () => {
-		if (accountNumber.length < 10) return;
-		setLooking(true);
-		setTimeout(() => {
-			setAccountName("SPEEDEX COURIERS LIMITED");
-			setLooking(false);
-		}, 1200);
+	const requestPayoutMutation = transaction.requestPayout.useMutation({
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["wallet"] });
+			queryClient.invalidateQueries({ queryKey: ["transaction"] });
+			toast.success("Withdrawal requested");
+			onClose();
+		},
+		onError: (error) =>
+			toast.error(
+				(error as AxiosError<{ message: string }>).response?.data
+					?.message || "Failed to request withdrawal",
+			),
+	});
+
+	const handleSubmit = () => {
+		const numericAmount = Number(amount);
+		if (!numericAmount || numericAmount <= 0) return;
+		requestPayoutMutation.mutate({ amount: numericAmount });
 	};
 
 	return (
@@ -271,340 +169,250 @@ function WithdrawModal({ onClose }: { onClose: () => void }) {
 					</span>
 				</div>
 
-				{step === "amount" && (
-					<div className="space-y-4">
-						<div>
-							<label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block mb-1.5">
-								Withdrawal Amount (₦)
-							</label>
-							<Input
-								type="number"
-								placeholder="Enter amount"
-								value={amount}
-								onChange={(e) => setAmount(e.target.value)}
-								className="bg-silver-two border-0 focus-visible:ring-secondary text-lg font-bold"
-							/>
-						</div>
-						<div>
-							<label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block mb-1.5">
-								Bank
-							</label>
-							<select
-								value={bank}
-								onChange={(e) => setBank(e.target.value)}
-								className="w-full bg-silver-two rounded-xl px-4 py-2.5 text-sm border-0 outline-none focus:ring-2 focus:ring-secondary text-foreground"
-							>
-								<option value="">Select bank...</option>
-								{banks.map((b) => (
-									<option key={b} value={b}>
-										{b}
-									</option>
-								))}
-							</select>
-						</div>
-						<div>
-							<label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block mb-1.5">
-								Account Number
-							</label>
-							<div className="flex gap-2">
-								<Input
-									placeholder="10-digit account number"
-									maxLength={10}
-									value={accountNumber}
-									onChange={(e) => {
-										setAccountNumber(e.target.value);
-										setAccountName("");
-									}}
-									className="bg-silver-two border-0 focus-visible:ring-secondary"
-								/>
-								<Button
-									variant="ghost"
-									size="icon"
-									onClick={lookupAccount}
-									disabled={
-										accountNumber.length < 10 || looking
-									}
-								>
-									{looking ? (
-										<MaterialIcon
-											name="hourglass_empty"
-											size={16}
-											color="var(--muted-foreground)"
-										/>
-									) : (
-										<MaterialIcon
-											name="search"
-											size={16}
-											color="var(--primary)"
-										/>
-									)}
-								</Button>
-							</div>
-							{accountName && (
-								<div className="mt-2 flex items-center gap-2 text-xs text-secondary-two font-bold">
-									<MaterialIcon
-										name="check_circle"
-										size={14}
-										color="var(--secondary)"
-									/>
-									{accountName}
-								</div>
-							)}
-						</div>
-						<div className="flex gap-3 pt-2">
-							<Button
-								variant="ghost"
-								className="flex-1"
-								onClick={onClose}
-							>
-								Cancel
-							</Button>
-							<Button
-								className="flex-1"
-								disabled={
-									!amount ||
-									!bank ||
-									!accountNumber ||
-									!accountName
-								}
-								onClick={() => setStep("confirm")}
-							>
-								Continue
-							</Button>
-						</div>
+				<div className="space-y-4">
+					<div>
+						<label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block mb-1.5">
+							Withdrawal Amount (₦)
+						</label>
+						<Input
+							type="number"
+							placeholder="Enter amount"
+							value={amount}
+							onChange={(e) => setAmount(e.target.value)}
+							className="bg-silver-two border-0 focus-visible:ring-secondary text-lg font-bold"
+						/>
 					</div>
-				)}
-
-				{step === "confirm" && (
-					<div className="space-y-4">
-						<div className="bg-silver-two rounded-xl p-4 space-y-2">
-							<div className="flex justify-between text-sm">
-								<span className="text-muted-foreground">
-									Amount
-								</span>
-								<span className="font-extrabold text-primary text-lg">
-									₦{Number(amount).toLocaleString()}
-								</span>
-							</div>
-							<div className="flex justify-between text-sm">
-								<span className="text-muted-foreground">
-									Bank
-								</span>
-								<span className="font-semibold">{bank}</span>
-							</div>
-							<div className="flex justify-between text-sm">
-								<span className="text-muted-foreground">
-									Account
-								</span>
-								<span className="font-semibold">
-									{accountNumber}
-								</span>
-							</div>
-							<div className="flex justify-between text-sm">
-								<span className="text-muted-foreground">
-									Name
-								</span>
-								<span className="font-semibold text-secondary-two">
-									{accountName}
-								</span>
-							</div>
-							<div className="border-t border-border pt-2 flex justify-between text-xs text-muted-foreground">
-								<span>Fee</span>
-								<span>
-									₦
-									{Math.min(
-										Math.round(Number(amount) * 0.014),
-										1800,
-									).toLocaleString()}
-								</span>
-							</div>
-						</div>
-						<p className="text-xs text-muted-foreground">
-							By confirming, a transfer will be initiated via the
-							Nomba Transfer API. A unique{" "}
-							<strong>merchantTxRef</strong> will be generated to
-							prevent duplicate transfers.
-						</p>
-						<div className="flex gap-3">
-							<Button
-								variant="ghost"
-								className="flex-1"
-								onClick={() => setStep("amount")}
-							>
-								Back
-							</Button>
-							<Button className="flex-1" onClick={onClose}>
-								<MaterialIcon
-									name="send"
-									size={14}
-									color="white"
-								/>
-								Confirm Withdrawal
-							</Button>
-						</div>
+					<div className="flex gap-3 pt-2">
+						<Button
+							variant="ghost"
+							className="flex-1"
+							onClick={onClose}
+						>
+							Cancel
+						</Button>
+						<Button
+							className="flex-1"
+							disabled={
+								!amount ||
+								Number(amount) <= 0 ||
+								requestPayoutMutation.isPending
+							}
+							onClick={handleSubmit}
+						>
+							<MaterialIcon name="send" size={14} color="white" />
+							{requestPayoutMutation.isPending
+								? "Submitting..."
+								: "Submit"}
+						</Button>
 					</div>
-				)}
+				</div>
 			</div>
 		</div>
 	);
 }
 
-function RiderPayoutModal({
-	rider,
-	onClose,
-}: {
-	rider: RiderPayoutRecord;
-	onClose: () => void;
-}) {
-	const [accountName, setAccountName] = useState("");
-	const [looking, setLooking] = useState(false);
-	const [confirmed, setConfirmed] = useState(false);
+function RiderPayoutsSection() {
+	const [page, setPage] = useState(1);
 
-	const lookup = () => {
-		setLooking(true);
-		setTimeout(() => {
-			setAccountName(rider.riderName.toUpperCase());
-			setLooking(false);
-		}, 1000);
-	};
+	const { data, isLoading, isError } = transaction.getTransactions.useQuery({
+		variables: {
+			page,
+			limit: RIDER_PAYOUT_PAGE_SIZE,
+			type: "business_to_rider_payout",
+		} satisfies GetTransactionsParams,
+	});
+
+	const payouts = data?.data ?? [];
+	const meta = data?.meta;
 
 	return (
-		<div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-			<div className="bg-popover rounded-2xl border border-border p-6 w-full max-w-md shadow-2xl">
-				<div className="flex items-center justify-between mb-5">
-					<h3 className="text-base font-bold text-primary">
-						Rider Payout
-					</h3>
-					<button onClick={onClose}>
-						<MaterialIcon
-							name="close"
-							size={20}
-							color="var(--muted-foreground)"
-						/>
-					</button>
+		<div className="bg-popover rounded-2xl border border-border overflow-hidden">
+			<div className="flex items-center justify-between px-6 py-4 border-b border-border">
+				<div>
+					<h2 className="font-bold text-primary">Rider Payouts</h2>
+					<p className="text-xs text-muted-foreground mt-0.5">
+						Settled after each delivery via Nomba Transfer API
+					</p>
 				</div>
-
-				<div className="flex items-center gap-3 mb-5">
-					<div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-lg font-extrabold text-primary">
-						{rider.riderName
-							.split(" ")
-							.map((n) => n[0])
-							.join("")
-							.slice(0, 2)}
-					</div>
-					<div>
-						<div className="font-bold text-foreground">
-							{rider.riderName}
-						</div>
-						<div className="text-xs text-muted-foreground">
-							{rider.bankName} • {rider.vehicle}
-						</div>
-					</div>
-				</div>
-
-				<div className="bg-silver-two rounded-xl p-4 space-y-2 mb-4">
-					<div className="flex justify-between text-sm">
-						<span className="text-muted-foreground">
-							Completed Deliveries
-						</span>
-						<span className="font-bold">
-							{rider.completedDeliveries}
-						</span>
-					</div>
-					<div className="flex justify-between text-sm">
-						<span className="text-muted-foreground">
-							Rate per Delivery
-						</span>
-						<span className="font-bold">{rider.perDelivery}</span>
-					</div>
-					<div className="border-t border-border pt-2 flex justify-between">
-						<span className="text-muted-foreground font-bold">
-							Total Due
-						</span>
-						<span className="font-extrabold text-primary text-lg">
-							{rider.totalDue}
-						</span>
-					</div>
-				</div>
-
-				<div className="flex items-center gap-2 bg-primary/5 rounded-xl p-3 mb-5">
-					<MaterialIcon
-						name="verified_user"
-						size={16}
-						color="var(--primary)"
-					/>
-					<span className="text-xs text-muted-foreground">
-						Account verified via{" "}
-						<strong className="text-primary">
-							Nomba Bank Lookup
-						</strong>
-					</span>
-				</div>
-
-				{!accountName ? (
-					<Button
-						className="w-full"
-						onClick={lookup}
-						disabled={looking}
-					>
-						{looking ? (
-							<>
-								<MaterialIcon
-									name="hourglass_empty"
-									size={14}
-									color="white"
-								/>{" "}
-								Verifying account...
-							</>
-						) : (
-							<>
-								<MaterialIcon
-									name="search"
-									size={14}
-									color="white"
-								/>{" "}
-								Verify Recipient Account
-							</>
-						)}
-					</Button>
-				) : (
-					<div className="space-y-3">
-						<div className="flex items-center gap-2 text-sm text-secondary-two font-bold bg-secondary/5 rounded-xl p-3">
-							<MaterialIcon
-								name="check_circle"
-								size={16}
-								color="var(--secondary)"
-							/>
-							Verified: {accountName}
-						</div>
-						<div className="flex gap-3">
-							<Button
-								variant="ghost"
-								className="flex-1"
-								onClick={onClose}
-							>
-								Cancel
-							</Button>
-							<Button
-								className="flex-1"
-								onClick={() => {
-									setConfirmed(true);
-									setTimeout(onClose, 800);
-								}}
-							>
-								<MaterialIcon
-									name="send"
-									size={14}
-									color="white"
-								/>
-								{confirmed
-									? "Sending..."
-									: `Pay ${rider.totalDue}`}
-							</Button>
-						</div>
-					</div>
-				)}
 			</div>
+			<div className="overflow-x-auto">
+				<table className="w-full text-sm">
+					<thead>
+						<tr className="bg-silver-two border-b border-border">
+							<th className="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+								Rider
+							</th>
+							<th className="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-widest text-muted-foreground hidden lg:table-cell">
+								Order
+							</th>
+							<th className="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-widest text-muted-foreground hidden md:table-cell">
+								Rider Amount
+							</th>
+							<th className="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+								Amount
+							</th>
+							<th className="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-widest text-muted-foreground hidden md:table-cell">
+								Date
+							</th>
+							<th className="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+								Status
+							</th>
+							<th className="text-right px-5 py-3.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+								<span className="sr-only">View</span>
+							</th>
+						</tr>
+					</thead>
+					<tbody className="divide-y divide-border">
+						{isLoading && (
+							<tr>
+								<td
+									colSpan={7}
+									className="text-center py-12 text-muted-foreground text-sm"
+								>
+									Loading rider payouts...
+								</td>
+							</tr>
+						)}
+						{isError && (
+							<tr>
+								<td
+									colSpan={7}
+									className="text-center py-12 text-destructive text-sm"
+								>
+									Failed to load rider payouts.
+								</td>
+							</tr>
+						)}
+						{!isLoading && !isError && payouts.length === 0 && (
+							<tr>
+								<td
+									colSpan={7}
+									className="text-center py-12 text-muted-foreground text-sm"
+								>
+									No rider payouts found
+								</td>
+							</tr>
+						)}
+						{!isLoading &&
+							!isError &&
+							payouts.map((p) => {
+								const cfg = getRiderPayoutStatusConfig(
+									p.journal.status,
+								);
+								const rider = p.journal.rider;
+								const riderName =
+									`${rider.firstName} ${rider.lastName}`.trim();
+								return (
+									<tr
+										key={p.id}
+										className="hover:bg-muted/20 transition-colors"
+									>
+										<td className="px-5 py-4">
+											<div className="flex items-center gap-2.5">
+												{rider.profilePhoto ? (
+													// eslint-disable-next-line @next/next/no-img-element
+													<img
+														src={rider.profilePhoto}
+														alt=""
+														className="w-8 h-8 rounded-full object-cover shrink-0"
+													/>
+												) : (
+													<div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-extrabold text-primary shrink-0">
+														{riderName
+															.split(" ")
+															.map((n) => n[0])
+															.join("")
+															.slice(0, 2)}
+													</div>
+												)}
+												<div>
+													<div className="font-semibold text-foreground text-sm">
+														{riderName}
+													</div>
+													<div className="text-xs text-muted-foreground capitalize">
+														{rider.vehicleType}
+													</div>
+												</div>
+											</div>
+										</td>
+										<td className="px-5 py-4 hidden lg:table-cell font-mono text-xs text-muted-foreground/70">
+											{p.journal.orderId ?? "—"}
+										</td>
+										<td className="px-5 py-4 hidden md:table-cell text-xs text-muted-foreground">
+											{p.journal.metadata?.riderAmount !=
+											null
+												? formatNaira(
+														p.journal.metadata
+															.riderAmount,
+													)
+												: "—"}
+										</td>
+										<td className="px-5 py-4 font-extrabold text-primary">
+											{formatNaira(p.amount)}
+										</td>
+										<td className="px-5 py-4 hidden md:table-cell text-xs text-muted-foreground">
+											{formatDateTime(p.createdAt)}
+										</td>
+										<td className="px-5 py-4">
+											<span
+												className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wide ${cfg.bg} ${cfg.text}`}
+											>
+												<MaterialIcon
+													name={cfg.icon}
+													size={11}
+													color="currentColor"
+												/>
+												{cfg.label}
+											</span>
+										</td>
+										<td className="px-5 py-4 text-right">
+											<Link
+												href={`/dashboard/payout/rider/${p.id}`}
+												onClick={() =>
+													cacheRiderPayoutTransaction(
+														p,
+													)
+												}
+											>
+												<Button
+													size="sm"
+													variant="ghost"
+													className="text-primary"
+												>
+													<MaterialIcon
+														name="visibility"
+														size={14}
+														color="var(--primary)"
+													/>
+													View Details
+												</Button>
+											</Link>
+										</td>
+									</tr>
+								);
+							})}
+					</tbody>
+				</table>
+			</div>
+			{meta && (
+				<div className="px-6 py-4 border-t border-border flex items-center justify-between">
+					<p className="text-xs text-muted-foreground">
+						Page{" "}
+						<span className="font-bold text-foreground">
+							{meta.currentPage ?? page}
+						</span>{" "}
+						of{" "}
+						<span className="font-bold text-foreground">
+							{meta.totalPages ?? 1}
+						</span>
+					</p>
+					<Pagination
+						currentPage={meta.currentPage ?? page}
+						totalPages={meta.totalPages ?? 1}
+						onPageChange={setPage}
+					/>
+				</div>
+			)}
 		</div>
 	);
 }
@@ -830,14 +638,15 @@ function WithdrawalHistorySection() {
 
 export default function PayoutPage() {
 	const [withdrawModal, setWithdrawModal] = useState(false);
-	const [payoutRider, setPayoutRider] = useState<RiderPayoutRecord | null>(
-		null,
-	);
 	const [accountFormOpen, setAccountFormOpen] = useState(false);
 	const [noAccountPromptDismissed, setNoAccountPromptDismissed] =
 		useState(false);
 
 	const queryClient = useQueryClient();
+
+	const { data: walletData, isLoading: walletLoading } =
+		wallet.get.useQuery();
+	const walletBalance = walletData?.data?.balance ?? 0;
 
 	const {
 		data: payoutAccountData,
@@ -890,10 +699,6 @@ export default function PayoutPage() {
 			createAccountMutation.mutate(payload);
 		}
 	};
-
-	const pendingPayoutsTotal = riderPayouts
-		.filter((r) => r.status === "PENDING")
-		.reduce((sum, r) => sum + parseInt(r.totalDue.replace(/[₦,]/g, "")), 0);
 
 	return (
 		<div className="px-6 lg:px-10 py-8 space-y-8">
@@ -980,238 +785,55 @@ export default function PayoutPage() {
 					))}
 			</div>
 
-			{/* Wallet & summary */}
-			<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-				<div className="sm:col-span-1 bg-primary rounded-2xl p-6 text-primary-foreground relative overflow-hidden">
-					<div className="absolute -right-8 -bottom-8 w-32 h-32 bg-secondary/10 rounded-full blur-2xl" />
-					<div className="relative z-10">
-						<div className="flex items-center gap-2 mb-4">
+			{/* Wallet */}
+			<div className="w-full relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-[#00251c] p-8 text-primary-foreground shadow-xl shadow-primary/20">
+				<div className="absolute -top-20 -left-16 w-64 h-64 bg-secondary/20 rounded-full blur-3xl" />
+				<div className="absolute -right-16 -bottom-20 w-72 h-72 bg-secondary/10 rounded-full blur-3xl" />
+				<div className="relative z-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+					<div>
+						<div className="inline-flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1 mb-5">
 							<MaterialIcon
-								name="account_balance_wallet"
-								size={18}
-								color="rgba(255,255,255,0.7)"
+								name="verified_user"
+								size={13}
+								color="var(--secondary)"
 							/>
-							<span className="text-xs font-bold uppercase tracking-widest text-white/70">
-								Nomba Wallet
+							<span className="text-[10px] font-bold uppercase tracking-widest text-white/80">
+								Powered by Nomba
 							</span>
 						</div>
-						<div className="text-4xl font-extrabold tracking-tight mb-1">
-							₦184,500
+
+						<div className="text-5xl font-extrabold tracking-tight mb-1.5">
+							{walletLoading
+								? "—"
+								: formatNairaDecimal(walletBalance)}
 						</div>
-						<div className="text-xs text-white/60 mb-4">
+						<div className="text-sm text-white/50">
 							Available balance
 						</div>
-						<Button
-							variant="secondary"
-							size="sm"
-							className="w-full font-bold"
-							onClick={() => setWithdrawModal(true)}
-						>
-							<MaterialIcon
-								name="send"
-								size={14}
-								color="var(--secondary-foreground)"
-							/>
-							Withdraw Funds
-						</Button>
 					</div>
-				</div>
-
-				<div className="bg-popover rounded-2xl border border-border p-5 flex flex-col justify-between">
-					<div className="flex items-center gap-2 mb-2">
+					<Button
+						variant="secondary"
+						onClick={() => setWithdrawModal(true)}
+						className="w-full lg:w-auto lg:min-w-[220px] h-12 text-sm font-extrabold shadow-lg shadow-secondary/30 hover:shadow-secondary/50 hover:-translate-y-0.5 transition-all"
+					>
 						<MaterialIcon
-							name="payments"
-							size={18}
-							color="var(--secondary)"
+							name="send"
+							size={16}
+							color="var(--secondary-foreground)"
 						/>
-						<span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-							Total Earned
-						</span>
-					</div>
-					<div>
-						<div className="text-3xl font-extrabold text-primary">
-							₦1,248,000
-						</div>
-						<div className="text-xs text-muted-foreground mt-0.5">
-							All time
-						</div>
-					</div>
-					<div className="mt-3 pt-3 border-t border-border text-xs text-muted-foreground">
-						This month:{" "}
-						<strong className="text-foreground">₦184,500</strong>
-					</div>
-				</div>
-
-				<div className="bg-popover rounded-2xl border border-border p-5 flex flex-col justify-between">
-					<div className="flex items-center gap-2 mb-2">
-						<MaterialIcon
-							name="pending_actions"
-							size={18}
-							color="#D97706"
-						/>
-						<span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-							Pending Payouts
-						</span>
-					</div>
-					<div>
-						<div className="text-3xl font-extrabold text-primary">
-							₦{pendingPayoutsTotal.toLocaleString()}
-						</div>
-						<div className="text-xs text-muted-foreground mt-0.5">
-							Across{" "}
-							{
-								riderPayouts.filter(
-									(r) => r.status === "PENDING",
-								).length
-							}{" "}
-							riders
-						</div>
-					</div>
-					<div className="mt-3 pt-3 border-t border-border text-xs text-muted-foreground">
-						Last payout:{" "}
-						<strong className="text-foreground">2026-06-21</strong>
-					</div>
+						Withdraw Funds
+					</Button>
 				</div>
 			</div>
 
 			{/* Rider Payouts */}
-			<div className="bg-popover rounded-2xl border border-border overflow-hidden">
-				<div className="flex items-center justify-between px-6 py-4 border-b border-border">
-					<div>
-						<h2 className="font-bold text-primary">
-							Rider Payouts
-						</h2>
-						<p className="text-xs text-muted-foreground mt-0.5">
-							Settled after each delivery via Nomba Transfer API
-						</p>
-					</div>
-				</div>
-				<div className="overflow-x-auto">
-					<table className="w-full text-sm">
-						<thead>
-							<tr className="bg-silver-two border-b border-border">
-								<th className="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-									Rider
-								</th>
-								<th className="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-widest text-muted-foreground hidden md:table-cell">
-									Deliveries
-								</th>
-								<th className="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-widest text-muted-foreground hidden lg:table-cell">
-									Bank
-								</th>
-								<th className="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-									Total Due
-								</th>
-								<th className="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-									Status
-								</th>
-								<th className="text-right px-5 py-3.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-									Action
-								</th>
-							</tr>
-						</thead>
-						<tbody className="divide-y divide-border">
-							{riderPayouts.map((r) => {
-								const cfg = statusConfig[r.status];
-								return (
-									<tr
-										key={r.riderId}
-										className="hover:bg-muted/20 transition-colors"
-									>
-										<td className="px-5 py-4">
-											<div className="flex items-center gap-2.5">
-												<div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-extrabold text-primary shrink-0">
-													{r.riderName
-														.split(" ")
-														.map((n) => n[0])
-														.join("")
-														.slice(0, 2)}
-												</div>
-												<div>
-													<div className="font-semibold text-foreground text-sm">
-														{r.riderName}
-													</div>
-													<div className="text-xs text-muted-foreground">
-														{r.vehicle}
-													</div>
-												</div>
-											</div>
-										</td>
-										<td className="px-5 py-4 hidden md:table-cell">
-											<div className="font-bold text-foreground">
-												{r.completedDeliveries}
-											</div>
-											<div className="text-xs text-muted-foreground">
-												@ {r.perDelivery} each
-											</div>
-										</td>
-										<td className="px-5 py-4 hidden lg:table-cell text-sm text-muted-foreground">
-											{r.bankName}
-										</td>
-										<td className="px-5 py-4 font-extrabold text-primary">
-											{r.totalDue}
-										</td>
-										<td className="px-5 py-4">
-											<span
-												className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wide ${cfg.bg} ${cfg.text}`}
-											>
-												<MaterialIcon
-													name={cfg.icon}
-													size={11}
-													color="currentColor"
-												/>
-												{cfg.label}
-											</span>
-											{r.nombaTxRef && (
-												<div className="text-[10px] text-muted-foreground/60 mt-0.5 font-mono">
-													{r.nombaTxRef}
-												</div>
-											)}
-										</td>
-										<td className="px-5 py-4 text-right">
-											{r.status === "PENDING" ? (
-												<Button
-													size="sm"
-													onClick={() =>
-														setPayoutRider(r)
-													}
-												>
-													<MaterialIcon
-														name="send"
-														size={12}
-														color="white"
-													/>
-													Pay Rider
-												</Button>
-											) : (
-												<Button
-													size="sm"
-													variant="ghost"
-													className="text-muted-foreground text-xs"
-												>
-													History
-												</Button>
-											)}
-										</td>
-									</tr>
-								);
-							})}
-						</tbody>
-					</table>
-				</div>
-			</div>
+			<RiderPayoutsSection />
 
 			{/* Withdrawal History */}
 			<WithdrawalHistorySection />
 
 			{withdrawModal && (
 				<WithdrawModal onClose={() => setWithdrawModal(false)} />
-			)}
-			{payoutRider && (
-				<RiderPayoutModal
-					rider={payoutRider}
-					onClose={() => setPayoutRider(null)}
-				/>
 			)}
 
 			<NoPayoutAccountModal

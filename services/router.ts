@@ -8,6 +8,7 @@ import * as analyticsApi from "./analytics";
 import * as uploadApi from "./upload";
 import * as accountApi from "./account";
 import * as transactionApi from "./transaction";
+import * as walletApi from "./wallet";
 
 export const auth = router("auth", {
 	login: router.mutation({
@@ -160,6 +161,18 @@ export const account = router("account", {
 export const transaction = router("transaction", {
 	getMyPayouts: router.query({
 		fetcher: transactionApi.getMyPayouts,
+	}),
+	getTransactions: router.query({
+		fetcher: transactionApi.getTransactions,
+	}),
+	requestPayout: router.mutation({
+		mutationFn: transactionApi.requestPayout,
+	}),
+});
+
+export const wallet = router("wallet", {
+	get: router.query({
+		fetcher: walletApi.getWallet,
 	}),
 });
 

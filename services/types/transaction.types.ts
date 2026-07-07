@@ -1,3 +1,5 @@
+import { OrderRider } from "./order.types";
+
 export type PayoutTransactionStatus =
 	"requested" | "processing" | "success" | "failed" | "canceled";
 
@@ -41,10 +43,49 @@ export interface PayoutTransaction {
 	updatedAt: string;
 }
 
+export interface RequestPayoutPayload {
+	amount: number;
+}
+
 export interface GetMyPayoutsParams {
 	page?: number;
 	limit?: number;
 	sortOrder?: PayoutSortOrder;
 	search?: string;
 	status?: PayoutTransactionStatusFilter;
+}
+
+export type LedgerTransactionDirection = "debit" | "credit";
+
+export type TransactionType = "business_withdrawal" | "business_to_rider_payout";
+
+export interface RiderPayoutTransactionMetadata {
+	initiatedBy?: string;
+	platformFee?: number;
+	riderAmount?: number;
+	totalAmount?: number;
+}
+
+export interface RiderPayoutJournal extends Omit<PayoutJournal, "metadata"> {
+	metadata: RiderPayoutTransactionMetadata | null;
+	rider: OrderRider;
+}
+
+export interface LedgerTransaction {
+	id: string;
+	journalId: string;
+	walletId: string;
+	direction: LedgerTransactionDirection;
+	amount: number;
+	currency: string;
+	journal: RiderPayoutJournal;
+	createdAt: string;
+}
+
+export interface GetTransactionsParams {
+	page?: number;
+	limit?: number;
+	type?: TransactionType;
+	sortOrder?: PayoutSortOrder;
+	search?: string;
 }
