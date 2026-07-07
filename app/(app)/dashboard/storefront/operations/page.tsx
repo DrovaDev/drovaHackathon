@@ -40,6 +40,21 @@ const dayOrder = [
 	"sunday",
 ];
 
+const buildFullWeek = (
+	existing: BusinessOperatingHourPayload[] = [],
+): BusinessOperatingHourPayload[] =>
+	dayOrder.map((day) => {
+		const found = existing.find((h) => h.day === day);
+		return (
+			found ?? {
+				day: day as BusinessOperatingHourPayload["day"],
+				opensAt: "09:00",
+				closesAt: "17:00",
+				status: "closed",
+			}
+		);
+	});
+
 export default function OperationsPage() {
 	const queryClient = useQueryClient();
 	const { data: profileResponse } = business.getProfile.useQuery();
@@ -66,12 +81,7 @@ export default function OperationsPage() {
 			setFleetSize(profile.fleetSize);
 		}
 
-		if (profile.operatingHours?.length) {
-			const sorted = [...profile.operatingHours].sort(
-				(a, b) => dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day),
-			);
-			setOperatingHours(sorted);
-		}
+		setOperatingHours(buildFullWeek(profile.operatingHours));
 	}, [profile]);
 
 	const toggleDeliveryScope = (value: string) => {
@@ -108,12 +118,7 @@ export default function OperationsPage() {
 		setFleetSize(
 			typeof profile.fleetSize === "number" ? profile.fleetSize : "",
 		);
-		if (profile.operatingHours?.length) {
-			const sorted = [...profile.operatingHours].sort(
-				(a, b) => dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day),
-			);
-			setOperatingHours(sorted);
-		}
+		setOperatingHours(buildFullWeek(profile.operatingHours));
 	};
 
 	const { mutate: saveProfile, isPending: isSaving } =
