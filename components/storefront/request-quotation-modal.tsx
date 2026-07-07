@@ -30,6 +30,20 @@ type ItemForm = {
   specialInstructions: string
 }
 
+const PACKAGE_TYPE_OPTIONS = [
+  { value: "document", label: "Document" },
+  { value: "parcel", label: "Parcel" },
+  { value: "food", label: "Food" },
+  { value: "medical", label: "Medical" },
+  { value: "clothing", label: "Clothing" },
+  { value: "electronics", label: "Electronics" },
+  { value: "confectionery", label: "Confectionery" },
+  { value: "bulky", label: "Bulky" },
+  { value: "furniture", label: "Furniture" },
+  { value: "grocery", label: "Grocery" },
+  { value: "fragile", label: "Fragile" },
+] as const
+
 const EMPTY_ITEM: ItemForm = {
   packageName: "",
   packageDescription: "",
@@ -414,7 +428,20 @@ export function RequestQuotationModal({ open, onClose, businessSlug }: Props) {
                       <Input value={item.packageName} onChange={(e) => updateItem(idx, { packageName: e.target.value })} className="bg-silver-two border-0" />
                     </Field>
                     <Field label="Package Type">
-                      <Input value={item.packageType} onChange={(e) => updateItem(idx, { packageType: e.target.value })} className="bg-silver-two border-0" placeholder="e.g. electronics" />
+                      <Select
+                        value={item.packageType}
+                        onValueChange={(v) => updateItem(idx, { packageType: v })}
+                        items={PACKAGE_TYPE_OPTIONS}
+                      >
+                        <SelectTrigger className="bg-silver-two border-0">
+                          <SelectValue placeholder="Select a package type" />
+                        </SelectTrigger>
+                        <SelectPopup>
+                          {PACKAGE_TYPE_OPTIONS.map(({ value, label }) => (
+                            <SelectItem key={value} value={value}>{label}</SelectItem>
+                          ))}
+                        </SelectPopup>
+                      </Select>
                     </Field>
                   </div>
                   <Field label="Description">
