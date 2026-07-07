@@ -1,5 +1,5 @@
 import { Help } from "@mui/icons-material";
-import { muiOpts } from "@/lib/utils";
+import { muiOpts, generateGradient } from "@/lib/utils";
 import { useUserSession } from "@/lib/user-session";
 import { usePathname } from "next/navigation";
 import { NotificationBell } from "@/components/notifications";
@@ -72,7 +72,14 @@ const Header = ({ toggleMenu }: HeaderProps) => {
 
 					{/* <Button size={'sm'} className="hidden lg:block">Complete Profile</Button> */}
 
-					<div className="h-10 w-10 rounded-full border-border border-2"></div>
+					<div
+							className="h-10 w-10 rounded-full border-border border-2"
+							style={{
+								background: generateGradient(
+									userSession?.email || userSession?.businessName || "guest",
+								),
+							}}
+						></div>
 
 					<div
 						className="flex flex-col gap-1.25 items-end w-6 cursor-pointer transition duration-75 hover:opacity-70 lg:hidden"
