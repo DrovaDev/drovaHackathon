@@ -258,3 +258,18 @@ export interface CreateDirectOrderPayload {
 	note?: string;
 	paymentMethod: OrderPaymentMethod;
 }
+
+export interface CreateQuotationPayload {
+	pickupMethod: OrderPickupMethod;
+	deliveryPriority: OrderDeliveryPriority;
+	preferredDeliveryTime?: string;
+	customerNote?: string;
+	senderDetails: CreateOrderSenderDetails;
+	recipientDetails: CreateOrderRecipientDetails;
+	pickupDetails: CreateOrderPickupDetails;
+	deliveryDetails: CreateOrderDeliveryDetails;
+	items: CreateOrderItemPayload[];
+	pickupInstructions?: string;
+	deliveryInstructions?: string;
+	businessSlug: string;
+}

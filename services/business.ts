@@ -6,7 +6,9 @@ import {
 	BusinessProfileSetupPayload,
 	GetBusinessLookupsResponse,
 	GetBusinessStatesResponse,
+	GetStorefrontParams,
 	SetDeliveryPricingPayload,
+	StorefrontResponse,
 	ValidateTINPayload,
 } from "./types/business.types";
 import { ApiResponse } from "./types/general.types";
@@ -67,5 +69,17 @@ export async function getBusinessLookups() {
 		await apiClient.get<ApiResponse<GetBusinessLookupsResponse>>(
 			"/business/lookups",
 		);
+	return response.data;
+}
+
+export async function getStorefrontBySlug({
+	slug,
+	page,
+	limit,
+}: GetStorefrontParams) {
+	const response = await apiClient.get<ApiResponse<StorefrontResponse>>(
+		`/business/${slug}/storefront`,
+		{ params: { page, limit } },
+	);
 	return response.data;
 }

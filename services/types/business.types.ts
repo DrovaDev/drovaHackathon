@@ -129,3 +129,44 @@ export interface GetBusinessLookupsResponse {
     businessDaysOfWeek: KeyValuePair[];
     businessOperatingStatus: KeyValuePair[];
 }
+
+export interface StorefrontBusinessProfile {
+	id: string;
+	authId: string;
+	isVerified: boolean;
+	businessName: string;
+	businessDescription: string;
+	businessAddress: string;
+	businessState: string;
+	location: BusinessLocationPayload;
+	deliveryScope: DeliveryScope[];
+	fleetSize: number;
+	businessRegistrationNumber: string;
+	contactNumber: string;
+	businessLogo: string;
+	coverImage: string;
+	slug: string;
+	operatingHours: BusinessOperatingHourPayload[];
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface StorefrontReview {
+	id: string;
+	rating: number;
+	comment: string;
+	customerName?: string;
+	createdAt: string;
+}
+
+export interface StorefrontResponse {
+	business: StorefrontBusinessProfile;
+	averageRating: number;
+	reviews: StorefrontReview[];
+}
+
+export interface GetStorefrontParams {
+	slug: string;
+	page?: number;
+	limit?: number;
+}

@@ -1,6 +1,7 @@
 import { router } from "react-query-kit";
 import * as authApi from "./auth";
 import * as businessApi from "./business";
+import { GetStorefrontParams } from "./types/business.types";
 import * as riderApi from "./rider";
 import { RiderListParams } from "./types/rider.types";
 import * as orderApi from "./order";
@@ -60,6 +61,10 @@ export const business = router("business", {
 	}),
 	getBusinessLookups: router.query({
 		fetcher: businessApi.getBusinessLookups,
+	}),
+	getStorefront: router.query({
+		fetcher: (variables: GetStorefrontParams) =>
+			businessApi.getStorefrontBySlug(variables),
 	}),
 });
 
@@ -139,6 +144,9 @@ export const order = router("order", {
 	}),
 	createDirectOrder: router.mutation({
 		mutationFn: orderApi.createDirectOrder,
+	}),
+	createQuotation: router.mutation({
+		mutationFn: orderApi.createQuotation,
 	}),
 });
 

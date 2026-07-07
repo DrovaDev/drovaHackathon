@@ -3,6 +3,7 @@ import { ApiResponse } from "./types/general.types";
 import {
 	CreateDirectOrderPayload,
 	CreateInvoicePayload,
+	CreateQuotationPayload,
 	GetOrdersParams,
 	GetQuotationsParams,
 	ManuallyAssignOrderPayload,
@@ -60,6 +61,14 @@ export async function manuallyAssignOrder(payload: ManuallyAssignOrderPayload) {
 export async function createDirectOrder(payload: CreateDirectOrderPayload) {
 	const response = await apiClient.post<ApiResponse<OrderDetail>>(
 		"/order/direct",
+		payload,
+	);
+	return response.data;
+}
+
+export async function createQuotation(payload: CreateQuotationPayload) {
+	const response = await apiClient.post<ApiResponse<OrderDetail>>(
+		"/order/create",
 		payload,
 	);
 	return response.data;
