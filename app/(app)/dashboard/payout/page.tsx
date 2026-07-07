@@ -181,6 +181,9 @@ function WithdrawModal({ onClose }: { onClose: () => void }) {
 							onChange={(e) => setAmount(e.target.value)}
 							className="bg-silver-two border-0 focus-visible:ring-secondary text-lg font-bold"
 						/>
+						<p className="text-xs text-muted-foreground mt-1.5">
+							Nomba charges ₦20 per bank transaction.
+						</p>
 					</div>
 					<div className="flex gap-3 pt-2">
 						<Button
