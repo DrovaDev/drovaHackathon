@@ -9,6 +9,8 @@ import * as uploadApi from "./upload";
 import * as accountApi from "./account";
 import * as transactionApi from "./transaction";
 import * as walletApi from "./wallet";
+import * as notificationApi from "./notification";
+import { GetNotificationsParams } from "./types/notification.types";
 
 export const auth = router("auth", {
 	login: router.mutation({
@@ -173,6 +175,22 @@ export const transaction = router("transaction", {
 export const wallet = router("wallet", {
 	get: router.query({
 		fetcher: walletApi.getWallet,
+	}),
+});
+
+export const notification = router("notification", {
+	inbox: router.query({
+		fetcher: (variables: GetNotificationsParams) =>
+			notificationApi.getInbox(variables),
+	}),
+	unreadCount: router.query({
+		fetcher: notificationApi.getUnreadCount,
+	}),
+	markAllRead: router.mutation({
+		mutationFn: notificationApi.markAllRead,
+	}),
+	markOneRead: router.mutation({
+		mutationFn: ({ id }: { id: string }) => notificationApi.markOneRead(id),
 	}),
 });
 

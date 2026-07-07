@@ -1,13 +1,15 @@
-import { Notifications, Help } from "@mui/icons-material";
+import { Help } from "@mui/icons-material";
 import { muiOpts } from "@/lib/utils";
 import { useUserSession } from "@/lib/user-session";
 import { usePathname } from "next/navigation";
+import { NotificationBell } from "@/components/notifications";
 
 const pageTitles: Record<string, string> = {
 	"/dashboard/orders/create": "Create Order",
 	"/dashboard/orders": "Orders",
 	"/dashboard/riders": "Riders",
 	"/dashboard/payout": "Payout",
+	"/dashboard/notifications": "Notifications",
 	"/dashboard/storefront/branding": "Identity & Branding",
 	"/dashboard/storefront/operations": "Operations",
 	"/dashboard/storefront": "Settings",
@@ -52,10 +54,7 @@ const Header = ({ toggleMenu }: HeaderProps) => {
 			</div>
 
 			<div className="flex items-center gap-2.5">
-				<div className="relative cursor-pointer hover:opacity-50 transition duration-300 ease-in">
-					<div className="absolute h-1 w-1 rounded-full bg-destructive top-0 right-0"></div>
-					<Notifications sx={muiOpts("var(--muted-foreground)")} />
-				</div>
+				<NotificationBell />
 
 				<div className="cursor-pointer hover:opacity-50 transition duration-300 ease-in hidden lg:block">
 					<Help sx={muiOpts("var(--muted-foreground)")} />
