@@ -174,8 +174,6 @@ export default function RidersPage() {
 				onEdit={setEditRider}
 				onSuspend={setConfirmDeleteRider}
 				onResendOtp={r => resendOtpMutation.mutate({ telephoneNumber: r.phoneNumber || r.telephoneNumber || "" })}
-				onUpdateAvailability={(id, status) => availabilityMutation.mutate({ riderId: id, availabilityStatus: status })}
-				isUpdatingAvailability={availabilityMutation.isPending}
 			/>
 
 			<EditRiderModal

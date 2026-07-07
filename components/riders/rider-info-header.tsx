@@ -10,11 +10,22 @@ type Props = {
 	variant: "map" | "standard"
 }
 
+function IconButton({ onClick, icon, title }: { onClick: () => void; icon: string; title?: string }) {
+	return (
+		<button
+			onClick={onClick}
+			title={title}
+			className="w-8 h-8 rounded-full bg-popover/90 backdrop-blur-sm border border-border shadow-sm hover:bg-muted transition-colors flex items-center justify-center"
+		>
+			<MaterialIcon name={icon} size={14} color="var(--muted-foreground)" />
+		</button>
+	)
+}
+
 export function RiderInfoHeader({ rider, onEdit, onClose, variant }: Props) {
 	const name = getRiderName(rider.firstName, rider.lastName)
 	const initials = name.split(" ").map(n => n[0]).join("").slice(0, 2)
 	const avCfg = availabilityConfig[rider.availabilityStatus ?? "offline"]
-	const phone = rider.phoneNumber || rider.telephoneNumber
 
 	if (variant === "map") {
 		return (
@@ -32,12 +43,8 @@ export function RiderInfoHeader({ rider, onEdit, onClose, variant }: Props) {
 					</div>
 				</div>
 				<div className="flex items-center gap-1.5">
-					<button onClick={onEdit} className="w-8 h-8 rounded-full bg-popover/90 backdrop-blur-sm border border-border shadow-sm hover:bg-muted transition-colors flex items-center justify-center" title="Edit rider">
-						<MaterialIcon name="edit" size={14} color="var(--muted-foreground)" />
-					</button>
-					<button onClick={onClose} className="w-8 h-8 rounded-full bg-popover/90 backdrop-blur-sm border border-border shadow-sm hover:bg-muted transition-colors flex items-center justify-center">
-						<MaterialIcon name="close" size={14} color="var(--muted-foreground)" />
-					</button>
+					<IconButton onClick={onEdit} icon="edit" title="Edit rider" />
+					<IconButton onClick={onClose} icon="close" />
 				</div>
 			</div>
 		)
@@ -54,17 +61,12 @@ export function RiderInfoHeader({ rider, onEdit, onClose, variant }: Props) {
 					<div className="flex items-center gap-2">
 						<StarRating rating={rider.rating ?? 0} />
 						<span className={`text-[10px] font-bold uppercase ${avCfg.text}`}>{avCfg.label}</span>
-						{phone && <span className="text-xs text-muted-foreground">· {phone}</span>}
 					</div>
 				</div>
 			</div>
-			<div className="flex items-center gap-1">
-				<button onClick={onEdit} className="p-2 rounded-lg border-0 outline-none hover:bg-muted transition-colors" title="Edit rider">
-					<MaterialIcon name="edit" size={18} color="var(--muted-foreground)" />
-				</button>
-				<button onClick={onClose} className="p-2 rounded-lg border-0 outline-none hover:bg-muted transition-colors">
-					<MaterialIcon name="close" size={18} color="var(--muted-foreground)" />
-				</button>
+			<div className="flex items-center gap-1.5">
+				<IconButton onClick={onEdit} icon="edit" title="Edit rider" />
+				<IconButton onClick={onClose} icon="close" />
 			</div>
 		</div>
 	)

@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { RiderProfile } from "@/services/types/rider.types"
 import { Button } from "@/components/ui/button"
 import MaterialIcon from "@/components/ui/material-icon"
@@ -10,7 +11,7 @@ import { RiderInfoHeader } from "./rider-info-header"
 import { RiderStatsGrid } from "./rider-stats-grid"
 import { RiderVehicleInfo } from "./rider-vehicle-info"
 import { RiderContact } from "./rider-contact"
-import { RiderAvailabilityToggle } from "./rider-availability-toggle"
+import { RiderAvailabilityBadge } from "./rider-availability-badge"
 
 type Props = {
 	rider: RiderProfile | null
@@ -18,15 +19,14 @@ type Props = {
 	onEdit: (rider: RiderProfile) => void
 	onSuspend: (rider: RiderProfile) => void
 	onResendOtp: (rider: RiderProfile) => void
-	onUpdateAvailability: (riderId: string, status: RiderProfile["availabilityStatus"]) => void
-	isUpdatingAvailability: boolean
 }
 
-export function RiderDetailModal({ rider, onClose, onEdit, onSuspend, onResendOtp, onUpdateAvailability, isUpdatingAvailability }: Props) {
+export function RiderDetailModal({ rider, onClose, onEdit, onSuspend, onResendOtp }: Props) {
 	if (!rider) return null
 
 	const isPending = rider.inviteStatus === "pending"
 	const hasLocation = hasRiderLocation(rider)
+	const phone = rider.phoneNumber || rider.telephoneNumber
 
 	return (
 		<div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -60,17 +60,35 @@ export function RiderDetailModal({ rider, onClose, onEdit, onSuspend, onResendOt
 					<RiderStatsGrid rider={rider} />
 					<RiderVehicleInfo rider={rider} />
 					<RiderContact rider={rider} />
-					<RiderAvailabilityToggle rider={rider} onUpdate={onUpdateAvailability} isUpdating={isUpdatingAvailability} />
+					<RiderAvailabilityBadge rider={rider} />
 				</div>
 
 				{/* Sticky footer */}
 				<div className="px-5 py-3.5 border-t border-border flex gap-3 shrink-0">
-					<Button variant="ghost" className="flex-1 text-destructive hover:text-destructive" onClick={() => onSuspend(rider)}>
-						Suspend Rider
-					</Button>
-					<Button className="flex-1" onClick={onClose}>
-						<MaterialIcon name="account_balance_wallet" size={14} color="white" />
-						Pay {formatCurrency(rider.pendingEarnings ?? 0)}
+					{phone && (
+						<a href={`tel:${phone}`} className="flex-1">
+							<Button variant="outline" className="w-full gap-2">
+								<MaterialIcon name="call" size={14} />
+								Call
+							</Button>
+						</a>
+					)}
+					{phone && (
+						<a href={`https://wa.me/${phone.replace(/[^0-9]/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex-1">
+							<Button variant="outline" className="w-full gap-2">
+								<MaterialIcon name="chat" size={14} />
+								WhatsApp
+							</Button>
+						</a>
+					)}
+					<Link href={`/dashboard/orders?tab=orders&search=${rider.firstName}`} className="flex-1">
+						<Button variant="outline" className="w-full gap-2">
+							<MaterialIcon name="receipt_long" size={14} />
+							Orders
+						</Button>
+					</Link>
+					<Button variant="ghost" className="text-destructive hover:text-destructive px-3" onClick={() => onSuspend(rider)}>
+						<MaterialIcon name="block" size={16} />
 					</Button>
 				</div>
 			</div>
