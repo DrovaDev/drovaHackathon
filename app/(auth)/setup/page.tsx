@@ -467,9 +467,16 @@ function Step2({
 								</Label>
 								<Input
 									placeholder="e.g. 22112233445"
+									inputMode="numeric"
+									maxLength={11}
 									value={details.bvn}
 									onChange={(e) =>
-										onChange("bvn", e.target.value)
+										onChange(
+											"bvn",
+											e.target.value
+												.replace(/\D/g, "")
+												.slice(0, 11),
+										)
 									}
 								/>
 							</div>
@@ -1111,6 +1118,16 @@ function Step4({
 
 // ─── Main Page ───────────────────────────────────────────────────────────────────
 
+const WEEKDAY_ORDER: OperatingDay[] = [
+	"monday",
+	"tuesday",
+	"wednesday",
+	"thursday",
+	"friday",
+	"saturday",
+	"sunday",
+];
+
 const DEFAULT_OPERATING_HOURS_BY_DAY: Record<
 	string,
 	{ opensAt: string; closesAt: string }
@@ -1122,7 +1139,8 @@ const DEFAULT_OPERATING_HOURS_BY_DAY: Record<
 function SetupPageContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
-	const [step, setStep] = useState(1);
+	const initialStep = searchParams.get("step") === "2" ? 2 : 1;
+	const [step, setStep] = useState(initialStep);
 	const [otp, setOtp] = useState("");
 	const email = searchParams.get("email") || getSignupSetupEmail() || "";
 
@@ -1177,14 +1195,24 @@ function SetupPageContent() {
 		}
 
 		setOperatingHours(
-			lookups.businessDaysOfWeek.map(({ key }) => ({
-				day: key.toLowerCase() as OperatingDay,
-				opensAt:
-					DEFAULT_OPERATING_HOURS_BY_DAY[key]?.opensAt ?? "08:00",
-				closesAt:
-					DEFAULT_OPERATING_HOURS_BY_DAY[key]?.closesAt ?? "18:00",
-				status: "open",
-			})),
+			[...lookups.businessDaysOfWeek]
+				.sort(
+					(a, b) =>
+						WEEKDAY_ORDER.indexOf(
+							a.key.toLowerCase() as OperatingDay,
+						) -
+						WEEKDAY_ORDER.indexOf(
+							b.key.toLowerCase() as OperatingDay,
+						),
+				)
+				.map(({ key }) => ({
+					day: key.toLowerCase() as OperatingDay,
+					opensAt:
+						DEFAULT_OPERATING_HOURS_BY_DAY[key]?.opensAt ?? "08:00",
+					closesAt:
+						DEFAULT_OPERATING_HOURS_BY_DAY[key]?.closesAt ?? "18:00",
+					status: "open",
+				})),
 		);
 	}, [lookups?.businessDaysOfWeek, operatingHours.length]);
 
@@ -1272,7 +1300,7 @@ function SetupPageContent() {
 				);
 				clearSignupSetupEmail();
 				clearSignupSetupTempToken();
-				router.push("/dashboard");
+				router.push("/login");
 			},
 			onError: (error) => {
 				const message = axios.isAxiosError(error)

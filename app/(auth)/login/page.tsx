@@ -63,7 +63,12 @@ const Login = () => {
 				});
 			}
 			toast.success(response.message || "Logged in successfully");
-			router.push("/dashboard");
+			if (response.data?.user?.hasCompletedBusinessProfile === false) {
+				const email = response.data.user.email ?? "";
+				router.push(`/setup?step=2&email=${encodeURIComponent(email)}`);
+			} else {
+				router.push("/dashboard");
+			}
 		},
 		onError: (error) => {
 			const message = axios.isAxiosError(error)
