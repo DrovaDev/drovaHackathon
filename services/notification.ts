@@ -24,14 +24,14 @@ export async function getUnreadCount() {
 }
 
 export async function markAllRead() {
-	const response = await apiClient.post<ApiResponse<MarkAllReadResult>>(
+	const response = await apiClient.patch<ApiResponse<MarkAllReadResult>>(
 		"/notification/inbox/read-all",
 	);
 	return response.data;
 }
 
 export async function markOneRead(id: string) {
-	const response = await apiClient.post<ApiResponse<MarkOneReadResult>>(
+	const response = await apiClient.patch<ApiResponse<MarkOneReadResult>>(
 		`/notification/inbox/${id}/read`,
 	);
 	return response.data;
