@@ -45,6 +45,7 @@ export interface PayoutTransaction {
 
 export interface RequestPayoutPayload {
 	amount: number;
+	withdrawalPin: string;
 }
 
 export interface GetMyPayoutsParams {

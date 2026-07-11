@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
@@ -16,6 +17,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import MaterialIcon from "@/components/ui/material-icon";
 import {
+	InputOTP,
+	InputOTPGroup,
+	InputOTPSlot,
+} from "@/components/ui/input-otp";
+import {
 	Select,
 	SelectTrigger,
 	SelectValue,
@@ -24,6 +30,7 @@ import {
 } from "@/components/ui/select";
 import { PayoutAccountModal } from "@/components/payout/payout-account-modal";
 import { NoPayoutAccountModal } from "@/components/payout/no-payout-account-modal";
+import { SetPinPromptModal } from "@/components/payout/set-pin-prompt-modal";
 import { Pagination } from "@/components/riders/pagination";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { cacheRiderPayoutTransaction } from "@/lib/rider-payout-cache";
@@ -31,6 +38,7 @@ import { getRiderPayoutStatusConfig } from "@/lib/rider-payout-status";
 
 const WITHDRAWAL_PAGE_SIZE = 10;
 const RIDER_PAYOUT_PAGE_SIZE = 10;
+const WITHDRAWAL_PIN_LENGTH = 4;
 
 const withdrawalStatusConfig: Record<
 	Exclude<PayoutTransactionStatusFilter, "all">,
@@ -117,6 +125,7 @@ function formatDateTime(iso: string): string {
 
 function WithdrawModal({ onClose }: { onClose: () => void }) {
 	const [amount, setAmount] = useState("");
+	const [withdrawalPin, setWithdrawalPin] = useState("");
 	const queryClient = useQueryClient();
 
 	const requestPayoutMutation = transaction.requestPayout.useMutation({
@@ -136,7 +145,11 @@ function WithdrawModal({ onClose }: { onClose: () => void }) {
 	const handleSubmit = () => {
 		const numericAmount = Number(amount);
 		if (!numericAmount || numericAmount <= 0) return;
-		requestPayoutMutation.mutate({ amount: numericAmount });
+		if (withdrawalPin.length !== WITHDRAWAL_PIN_LENGTH) return;
+		requestPayoutMutation.mutate({
+			amount: numericAmount,
+			withdrawalPin,
+		});
 	};
 
 	return (
@@ -185,6 +198,31 @@ function WithdrawModal({ onClose }: { onClose: () => void }) {
 							Nomba charges ₦20 per bank transaction.
 						</p>
 					</div>
+					<div>
+						<label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block mb-1.5">
+							Payout PIN
+						</label>
+						<InputOTP
+							maxLength={WITHDRAWAL_PIN_LENGTH}
+							value={withdrawalPin}
+							onChange={(val) =>
+								setWithdrawalPin(val.replace(/\D/g, ""))
+							}
+							inputMode="numeric"
+						>
+							<InputOTPGroup className="gap-2">
+								{Array.from({ length: WITHDRAWAL_PIN_LENGTH }).map(
+									(_, i) => (
+										<InputOTPSlot
+											key={i}
+											index={i}
+											className="size-11 rounded-xl border-2 text-base font-bold"
+										/>
+									),
+								)}
+							</InputOTPGroup>
+						</InputOTP>
+					</div>
 					<div className="flex gap-3 pt-2">
 						<Button
 							variant="ghost"
@@ -198,6 +236,7 @@ function WithdrawModal({ onClose }: { onClose: () => void }) {
 							disabled={
 								!amount ||
 								Number(amount) <= 0 ||
+								withdrawalPin.length !== WITHDRAWAL_PIN_LENGTH ||
 								requestPayoutMutation.isPending
 							}
 							onClick={handleSubmit}
@@ -640,7 +679,9 @@ function WithdrawalHistorySection() {
 }
 
 export default function PayoutPage() {
+	const router = useRouter();
 	const [withdrawModal, setWithdrawModal] = useState(false);
+	const [pinPromptOpen, setPinPromptOpen] = useState(false);
 	const [accountFormOpen, setAccountFormOpen] = useState(false);
 	const [noAccountPromptDismissed, setNoAccountPromptDismissed] =
 		useState(false);
@@ -650,6 +691,15 @@ export default function PayoutPage() {
 	const { data: walletData, isLoading: walletLoading } =
 		wallet.get.useQuery();
 	const walletBalance = walletData?.data?.balance ?? 0;
+	const hasWithdrawalPin = walletData?.data?.hasWithdrawalPin ?? false;
+
+	const handleWithdrawClick = () => {
+		if (!hasWithdrawalPin) {
+			setPinPromptOpen(true);
+			return;
+		}
+		setWithdrawModal(true);
+	};
 
 	const {
 		data: payoutAccountData,
@@ -814,18 +864,30 @@ export default function PayoutPage() {
 							Available balance
 						</div>
 					</div>
-					<Button
-						variant="secondary"
-						onClick={() => setWithdrawModal(true)}
-						className="w-full lg:w-auto lg:min-w-[220px] h-12 text-sm font-extrabold shadow-lg shadow-secondary/30 hover:shadow-secondary/50 hover:-translate-y-0.5 transition-all"
-					>
-						<MaterialIcon
-							name="send"
-							size={16}
-							color="var(--secondary-foreground)"
-						/>
-						Withdraw Funds
-					</Button>
+					<div className="flex flex-col sm:flex-row items-stretch gap-3 w-full lg:w-auto">
+						{!walletLoading && !hasWithdrawalPin && (
+							<Button
+								variant="ghost"
+								onClick={() => router.push("/dashboard/payout/pin")}
+								className="w-full lg:w-auto h-12 text-sm font-extrabold text-white bg-white/10 hover:bg-white/20 hover:text-white"
+							>
+								<MaterialIcon name="lock" size={16} color="white" />
+								Set Pin
+							</Button>
+						)}
+						<Button
+							variant="secondary"
+							onClick={handleWithdrawClick}
+							className="w-full lg:w-auto lg:min-w-[220px] h-12 text-sm font-extrabold shadow-lg shadow-secondary/30 hover:shadow-secondary/50 hover:-translate-y-0.5 transition-all"
+						>
+							<MaterialIcon
+								name="send"
+								size={16}
+								color="var(--secondary-foreground)"
+							/>
+							Withdraw Funds
+						</Button>
+					</div>
 				</div>
 			</div>
 
@@ -838,6 +900,15 @@ export default function PayoutPage() {
 			{withdrawModal && (
 				<WithdrawModal onClose={() => setWithdrawModal(false)} />
 			)}
+
+			<SetPinPromptModal
+				isOpen={pinPromptOpen}
+				onClose={() => setPinPromptOpen(false)}
+				onSetPin={() => {
+					setPinPromptOpen(false);
+					router.push("/dashboard/payout/pin");
+				}}
+			/>
 
 			<NoPayoutAccountModal
 				isOpen={noAccountPromptOpen}
