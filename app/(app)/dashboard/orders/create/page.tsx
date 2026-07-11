@@ -9,11 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { useOrders } from "@/lib/order-context"
 import { FormSection } from "@/components/orders"
-
-const PACKAGE_TYPES = [
-  "Documents", "Fragile Electronics", "Clothing", "Groceries",
-  "Furniture", "Medical Supplies", "Automotive Parts", "Other",
-] as const
+import { PACKAGE_TYPE_OPTIONS } from "@/lib/package-type"
 
 type FormFields = {
   customerName: string
@@ -166,8 +162,8 @@ export default function CreateOrderPage() {
                     className={`h-11 w-full rounded-lg border border-input bg-silver-two px-2.5 py-1 text-sm font-medium transition-colors outline-none focus-visible:border-secondary focus-visible:ring-3 focus-visible:ring-secondary/20 ${errors.packageType ? "border-destructive" : ""} ${!form.packageType ? "text-muted-foreground" : "text-foreground"}`}
                   >
                     <option value="" disabled>Select type...</option>
-                    {PACKAGE_TYPES.map((t) => (
-                      <option key={t} value={t}>{t}</option>
+                    {PACKAGE_TYPE_OPTIONS.map(({ value, label }) => (
+                      <option key={value} value={value}>{label}</option>
                     ))}
                   </select>
                 </FieldWrapper>

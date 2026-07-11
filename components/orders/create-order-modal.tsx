@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select"
 import { AddressMapPicker } from "./address-map-picker"
 import { matchState } from "@/lib/match-state"
+import { PACKAGE_TYPE_OPTIONS } from "@/lib/package-type"
 import { business, order } from "@/services/router"
 import type { OrderDeliveryPriority, OrderPaymentMethod, OrderPickupMethod } from "@/services/types/order.types"
 
@@ -399,7 +400,20 @@ export function CreateOrderModal({ open, onClose, onCreated }: Props) {
                       <Input value={item.packageName} onChange={(e) => updateItem(idx, { packageName: e.target.value })} className="bg-silver-two border-0" />
                     </Field>
                     <Field label="Package Type">
-                      <Input value={item.packageType} onChange={(e) => updateItem(idx, { packageType: e.target.value })} className="bg-silver-two border-0" placeholder="e.g. electronics" />
+                      <Select
+                        value={item.packageType}
+                        onValueChange={(v) => updateItem(idx, { packageType: v })}
+                        items={PACKAGE_TYPE_OPTIONS}
+                      >
+                        <SelectTrigger className="bg-silver-two border-0">
+                          <SelectValue placeholder="Select a package type" />
+                        </SelectTrigger>
+                        <SelectPopup>
+                          {PACKAGE_TYPE_OPTIONS.map(({ value, label }) => (
+                            <SelectItem key={value} value={value}>{label}</SelectItem>
+                          ))}
+                        </SelectPopup>
+                      </Select>
                     </Field>
                   </div>
                   <Field label="Description">

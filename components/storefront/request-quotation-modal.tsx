@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select"
 import { AddressMapPicker } from "@/components/orders/address-map-picker"
 import { matchState } from "@/lib/match-state"
+import { PACKAGE_TYPE_OPTIONS } from "@/lib/package-type"
 import { business, order } from "@/services/router"
 import type { OrderDeliveryPriority, OrderPickupMethod } from "@/services/types/order.types"
 
@@ -29,20 +30,6 @@ type ItemForm = {
   estimatedWeight: string
   specialInstructions: string
 }
-
-const PACKAGE_TYPE_OPTIONS = [
-  { value: "document", label: "Document" },
-  { value: "parcel", label: "Parcel" },
-  { value: "food", label: "Food" },
-  { value: "medical", label: "Medical" },
-  { value: "clothing", label: "Clothing" },
-  { value: "electronics", label: "Electronics" },
-  { value: "confectionery", label: "Confectionery" },
-  { value: "bulky", label: "Bulky" },
-  { value: "furniture", label: "Furniture" },
-  { value: "grocery", label: "Grocery" },
-  { value: "fragile", label: "Fragile" },
-] as const
 
 const EMPTY_ITEM: ItemForm = {
   packageName: "",
