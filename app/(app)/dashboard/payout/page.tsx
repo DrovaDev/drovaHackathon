@@ -865,14 +865,14 @@ export default function PayoutPage() {
 						</div>
 					</div>
 					<div className="flex flex-col sm:flex-row items-stretch gap-3 w-full lg:w-auto">
-						{!walletLoading && !hasWithdrawalPin && (
+						{!walletLoading && (
 							<Button
 								variant="ghost"
 								onClick={() => router.push("/dashboard/payout/pin")}
 								className="w-full lg:w-auto h-12 text-sm font-extrabold text-white bg-white/10 hover:bg-white/20 hover:text-white"
 							>
 								<MaterialIcon name="lock" size={16} color="white" />
-								Set Pin
+								{hasWithdrawalPin ? "Change Pin" : "Set Pin"}
 							</Button>
 						)}
 						<Button
