@@ -187,6 +187,12 @@ export const wallet = router("wallet", {
 	get: router.query({
 		fetcher: walletApi.getWallet,
 	}),
+	setWithdrawalPin: router.mutation({
+		mutationFn: walletApi.setWithdrawalPin,
+	}),
+	updateWithdrawalPin: router.mutation({
+		mutationFn: walletApi.updateWithdrawalPin,
+	}),
 });
 
 export const notification = router("notification", {

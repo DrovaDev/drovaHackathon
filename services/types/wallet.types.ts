@@ -11,6 +11,16 @@ export interface Wallet {
 	ledgerBalance: number;
 	status: WalletStatus;
 	provider: string;
+	hasWithdrawalPin: boolean;
 	createdAt: string;
 	updatedAt: string;
+}
+
+export interface SetWithdrawalPinPayload {
+	pin: string;
+}
+
+export interface UpdateWithdrawalPinPayload {
+	currentPin: string;
+	newPin: string;
 }
